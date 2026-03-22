@@ -1,5 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<body>
+
 <?php
 
+include("includes/header.php");
 include(__DIR__ . "/includes/db.php");
 
 $message = "";
@@ -34,29 +45,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-</head>
-<body>
+<h2>Register</h2>
 
-<h2>Sign Up to start reviewing movies</h2>
+<form method="POST" class="w-50">
+  <div class="mb-3">
+    <label class="form-label">Email</label>
+    <input type="email" name="email" class="form-control" required>
+  </div>
 
-<form method="POST">
-    <label>Email:</label><br>
-    <input type="email" name="email" required><br><br>
+  <div class="mb-3">
+    <label class="form-label">Alias</label>
+    <input type="text" name="alias" class="form-control" required>
+  </div>
 
-    <label>Create a username as an alias:</label><br>
-    <input type="text" name="alias" required><br><br>
+  <div class="mb-3">
+    <label class="form-label">Password</label>
+    <input type="password" name="password" class="form-control" required>
+  </div>
 
-    <label>Choose a Password:</label><br>
-    <input type="password" name="password" required><br><br>
-
-    <button type="submit">Register</button>
+  <button type="submit" class="btn btn-primary">Register</button>
 </form>
 
-<p><?php echo $message; ?></p>
+<p class="mt-3"><?php echo $message; ?></p>
+
+<p><?php echo $message; 
+
+include("includes/footer.php");
+
+?></p>
 
 </body>
 </html>
