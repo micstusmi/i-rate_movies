@@ -4,8 +4,6 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <body>
 
 <?php
@@ -68,11 +66,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <p class="mt-3"><?php echo $message; ?></p>
 
-<p><?php echo $message; 
+<p class="mt-3"><?php echo $message; ?></p>
 
-include("includes/footer.php");
-
-?></p>
+<?php include("includes/footer.php"); ?>
 
 </body>
 </html>
