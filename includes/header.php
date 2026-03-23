@@ -28,23 +28,29 @@ if (isset($_SESSION["user_id"])) {
 
 <nav class="navbar navbar-dark bg-dark">
   <div class="container d-flex justify-content-between">
-    
+
     <a class="navbar-brand" href="index.php">i-rate Movies</a>
 
-    <div>
-      <?php if (isset($_SESSION["user_id"])): ?>
-        <span class="text-white me-3">
-            Hello, <?php echo $_SESSION["alias"]; ?>
-            <?php if ($reviewCount >= 11): ?>
-    <span class="badge bg-warning text-dark ms-2">⭐ Super Reviewer</span>
-  <?php endif; ?>
-</span>
-        <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
-      <?php else: ?>
-        <a href="login.php" class="btn btn-success btn-sm me-2">Login</a>
-        <a href="register.php" class="btn btn-primary btn-sm">Register</a>
-      <?php endif; ?>
-    </div>
+    <?php if (isset($_SESSION["user_id"])): ?>
+
+      <span class="text-white me-3">
+        Hello,
+        <a href="my_account.php" class="text-white text-decoration-underline">
+          <?php echo htmlspecialchars($_SESSION["alias"]); ?>
+        </a>
+        <?php if ($reviewCount >= 11): ?>
+          <span class="badge bg-warning text-dark ms-2">⭐ Super Reviewer</span>
+        <?php endif; ?>
+      </span>
+
+      <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
+
+    <?php else: ?>
+
+      <a href="login.php" class="btn btn-success btn-sm me-2">Login</a>
+      <a href="register.php" class="btn btn-primary btn-sm">Register</a>
+
+    <?php endif; ?>
 
   </div>
 </nav>
