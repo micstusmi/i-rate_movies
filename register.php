@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
     // Check if email or alias already exists
-    $check = $conn->prepare("SELECT id FROM users WHERE email = ? OR alias = ?");
+    $check = $conn->prepare("SELECT user_id FROM users WHERE email = ? OR alias = ?");
     $check->bind_param("ss", $email, $alias);
     $check->execute();
     $check->store_result();
