@@ -26,7 +26,7 @@ $result = $conn->query("SELECT * FROM movies");
       <div class="card-footer d-flex justify-content-between align-items-center">
         <span class="badge bg-secondary"><?php echo $movie['genre']; ?></span>
         <a href="movie.php?id=<?php echo $movie['movie_id']; ?>" class="btn btn-primary btn-sm">
-          View
+            View
         </a>
       </div>
 
