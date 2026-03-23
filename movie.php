@@ -10,9 +10,9 @@ if (!isset($_GET["id"])) {
     exit;
 }
 
-$id = (int)$_GET["id"];        // this is movie_id from the URL
+$id = (int)$_GET["id"];  // this will be used as movie_id
 
-// 2) Fetch movie first (so $movie is available for display + checks)
+// 2) Fetch movie data first
 $stmt = $conn->prepare("SELECT * FROM movies WHERE movie_id = ?");
 if (!$stmt) {
     die("Prepare failed: " . $conn->error);
@@ -38,7 +38,7 @@ if (isset($_POST["submit_review"])) {
     }
 
     $user_id  = (int)$_SESSION["user_id"];
-    $movie_id = $id;                // already from URL / DB
+    $movie_id = $id; // same as in URL / used above
     $rating   = (int)$_POST["rating"];
     $comment  = $_POST["comment"];
 
@@ -51,10 +51,14 @@ if (isset($_POST["submit_review"])) {
     }
 
     $stmt->bind_param("iiis", $user_id, $movie_id, $rating, $comment);
-    $stmt->execute();
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+
     $stmt->close();
 
-    // optional: redirect to avoid resubmission on refresh
+    // Avoid resubmit on refresh
     header("Location: movie.php?id=" . $id);
     exit;
 }
