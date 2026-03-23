@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<h2>Register</h2>
+<h2>Sign up to start reviewing</h2>
 
 <form method="POST" class="w-50">
   <div class="mb-3">
