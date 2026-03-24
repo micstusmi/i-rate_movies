@@ -17,7 +17,6 @@ if (isset($_SESSION["user_id"])) {
     $reviewCount = $row["total"];
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -29,7 +28,6 @@ if (isset($_SESSION["user_id"])) {
 
 <nav class="navbar navbar-dark bg-dark">
   <div class="container d-flex justify-content-between">
-
     <a class="navbar-brand" href="index.php">i-rate Movies</a>
 
     <?php if (isset($_SESSION["user_id"])): ?>
@@ -44,14 +42,10 @@ if (isset($_SESSION["user_id"])) {
       </span>
 
       <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
-
     <?php else: ?>
-
       <a href="login.php" class="btn btn-success btn-sm me-2">Login</a>
       <a href="register.php" class="btn btn-primary btn-sm">Register</a>
-
     <?php endif; ?>
-
   </div>
 </nav>
 

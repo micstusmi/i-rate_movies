@@ -33,8 +33,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<?php include("includes/header.php"); ?>
-
 <h2>Login</h2>
 
 <form method="POST" class="w-50">
