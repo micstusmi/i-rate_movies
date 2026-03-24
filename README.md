@@ -29,3 +29,5 @@ Web Dev Tech Stack
 - MySQL
 - Bootstrap for layout/styling plus pencil / stars / bin icons.
 - Xampp for database tables and for local database hosting / developing.
+- HTML
+- JavaScript
