@@ -4,9 +4,9 @@ include(__DIR__ . "/includes/header.php");
 
 // Reads filter / sorts values from query string
 
-$genre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
-$year  = isset($_GET['year'])  ? $_GET['year']  : 'all';
-$sort  = isset($_GET['sort'])  ? $_GET['sort']  : 'random';
+$selectedGenre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
+$selectedYear  = isset($_GET['year'])  ? $_GET['year']  : 'all';
+$sortOrder     = isset($_GET['sort'])  ? $_GET['sort']  : 'random';
 
 // Gets distinct genres from movies
 
@@ -17,8 +17,8 @@ $genresResult = $conn->query("
     ORDER BY genre
 ");
 $genres = [];
-while ($row = $genresResult->fetch_assoc()) {
-    $genres[] = $row['genre'];
+while ($genreRow = $genresResult->fetch_assoc()) {
+    $genres[] = $genreRow['genre'];
 }
 
 // Defines year ranges
@@ -37,58 +37,58 @@ $yearRanges = [
 
 // Builds 'WHERE' conditions
 
-$where  = [];
-$params = [];
-$types  = "";
+$whereClauses = [];
+$queryParams  = [];
+$paramTypes   = "";
 
 // Genre filter
-if ($genre !== 'all' && $genre !== '') {
-    $where[]   = "genre = ?";
-    $types    .= "s";
-    $params[]  = $genre;
+if ($selectedGenre !== 'all' && $selectedGenre !== '') {
+    $whereClauses[] = "genre = ?";
+    $paramTypes    .= "s";
+    $queryParams[]  = $selectedGenre;
 }
 
 // Year range filter
-if ($year !== 'all' && isset($yearRanges[$year])) {
-    [$startYear, $endYear] = $yearRanges[$year];
-    $where[]   = "`year` BETWEEN ? AND ?";
-    $types    .= "ii";
-    $params[]  = $startYear;
-    $params[]  = $endYear;
+if ($selectedYear !== 'all' && isset($yearRanges[$selectedYear])) {
+    [$startYear, $endYear] = $yearRanges[$selectedYear];
+    $whereClauses[] = "`year` BETWEEN ? AND ?";
+    $paramTypes    .= "ii";
+    $queryParams[]  = $startYear;
+    $queryParams[]  = $endYear;
 }
 
 $whereSql = "";
-if (!empty($where)) {
-    $whereSql = "WHERE " . implode(" AND ", $where);
+if (!empty($whereClauses)) {
+    $whereSql = "WHERE " . implode(" AND ", $whereClauses);
 }
 
 // Sort order
-switch ($sort) {
+switch ($sortOrder) {
     case 'rating_desc':
-        $orderBy = "ORDER BY avg_rating DESC, title ASC";
+        $orderBySql = "ORDER BY avg_rating DESC, title ASC";
         break;
     case 'year_asc':
-        $orderBy = "ORDER BY `year` ASC, title ASC";
+        $orderBySql = "ORDER BY `year` ASC, title ASC";
         break;
     case 'year_desc':
-        $orderBy = "ORDER BY `year` DESC, title ASC";
+        $orderBySql = "ORDER BY `year` DESC, title ASC";
         break;
     case 'random':
     default:
-        $orderBy = "ORDER BY RAND()";
+        $orderBySql = "ORDER BY RAND()";
         break;
 }
 
 // Final query
-$sql = "SELECT * FROM movies $whereSql $orderBy";
-$stmt = $conn->prepare($sql);
+$moviesQuerySql = "SELECT * FROM movies $whereSql $orderBySql";
+$moviesStmt = $conn->prepare($moviesQuerySql);
 
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+if (!empty($queryParams)) {
+    $moviesStmt->bind_param($paramTypes, ...$queryParams);
 }
 
-$stmt->execute();
-$result = $stmt->get_result();
+$moviesStmt->execute();
+$moviesResult = $moviesStmt->get_result();
 ?>
 
 <h2 class="mb-4">Movies</h2>
@@ -111,16 +111,16 @@ $result = $stmt->get_result();
                                 type="submit"
                                 name="genre"
                                 value="all"
-                                class="list-group-item list-group-item-action <?php echo ($genre === 'all') ? 'active' : ''; ?>">
+                                class="list-group-item list-group-item-action <?php echo ($selectedGenre === 'all') ? 'active' : ''; ?>">
                                 All
                             </button>
-                            <?php foreach ($genres as $g): ?>
+                            <?php foreach ($genres as $genre): ?>
                                 <button
                                     type="submit"
                                     name="genre"
-                                    value="<?php echo htmlspecialchars($g); ?>"
-                                    class="list-group-item list-group-item-action <?php echo ($genre === $g) ? 'active' : ''; ?>">
-                                    <?php echo htmlspecialchars($g); ?>
+                                    value="<?php echo htmlspecialchars($genre); ?>"
+                                    class="list-group-item list-group-item-action <?php echo ($selectedGenre === $genre) ? 'active' : ''; ?>">
+                                    <?php echo htmlspecialchars($genre); ?>
                                 </button>
                             <?php endforeach; ?>
                         </div>
@@ -134,7 +134,7 @@ $result = $stmt->get_result();
                                 type="submit"
                                 name="year"
                                 value="all"
-                                class="list-group-item list-group-item-action <?php echo ($year === 'all') ? 'active' : ''; ?>">
+                                class="list-group-item list-group-item-action <?php echo ($selectedYear === 'all') ? 'active' : ''; ?>">
                                 All Years
                             </button>
                             <?php foreach ($yearRanges as $label => $range): ?>
@@ -142,7 +142,7 @@ $result = $stmt->get_result();
                                     type="submit"
                                     name="year"
                                     value="<?php echo $label; ?>"
-                                    class="list-group-item list-group-item-action <?php echo ($year === $label) ? 'active' : ''; ?>">
+                                    class="list-group-item list-group-item-action <?php echo ($selectedYear === $label) ? 'active' : ''; ?>">
                                     <?php echo $label; ?>
                                 </button>
                             <?php endforeach; ?>
@@ -154,23 +154,23 @@ $result = $stmt->get_result();
                         <h6 class="mb-2">Sort by</h6>
 
                         <!-- Preserves current genre/year when changing sort -->
-                        <input type="hidden" name="genre" value="<?php echo htmlspecialchars($genre); ?>">
-                        <input type="hidden" name="year"  value="<?php echo htmlspecialchars($year); ?>">
+                        <input type="hidden" name="genre" value="<?php echo htmlspecialchars($selectedGenre); ?>">
+                        <input type="hidden" name="year"  value="<?php echo htmlspecialchars($selectedYear); ?>">
 
                         <select name="sort" class="form-select" onchange="this.form.submit()">
-                            <option value="random" <?php echo ($sort === 'random') ? 'selected' : ''; ?>>
+                            <option value="random" <?php echo ($sortOrder === 'random') ? 'selected' : ''; ?>>
                                 Random
-                                </option>
-                            <option value="rating_desc" <?php echo ($sort === 'rating_desc') ? 'selected' : ''; ?>>
+                            </option>
+                            <option value="rating_desc" <?php echo ($sortOrder === 'rating_desc') ? 'selected' : ''; ?>>
                                 Highest Rated
                             </option>
-                            <option value="year_asc" <?php echo ($sort === 'year_asc') ? 'selected' : ''; ?>>
+                            <option value="year_asc" <?php echo ($sortOrder === 'year_asc') ? 'selected' : ''; ?>>
                                 Year Made (Oldest First)
                             </option>
-                        <option value="year_desc" <?php echo ($sort === 'year_desc') ? 'selected' : ''; ?>>
-        Year Made (Newest First)
-    </option>
-</select>
+                            <option value="year_desc" <?php echo ($sortOrder === 'year_desc') ? 'selected' : ''; ?>>
+                                Year Made (Newest First)
+                            </option>
+                        </select>
                     </div>
                 </form>
             </div>
@@ -180,12 +180,12 @@ $result = $stmt->get_result();
     <!-- Movies grid -->
     <div class="col-md-9">
         <div class="row">
-            <?php if ($result->num_rows === 0): ?>
+            <?php if ($moviesResult->num_rows === 0): ?>
                 <div class="col-12">
                     <p>No movies found for the selected filters.</p>
                 </div>
             <?php else: ?>
-                <?php while ($movie = $result->fetch_assoc()): ?>
+                <?php while ($movie = $moviesResult->fetch_assoc()): ?>
                     <div class="col-md-4 mb-4">
                         <div class="card shadow p-3 h-100">
                             <img src="<?php echo htmlspecialchars($movie['image_url']); ?>"
@@ -212,10 +212,10 @@ $result = $stmt->get_result();
                                 </div>
                                 <div class="text-end">
                                     <?php
-                                        $avg = isset($movie['avg_rating']) ? (float)$movie['avg_rating'] : 0;
+                                        $averageRating = isset($movie['avg_rating']) ? (float)$movie['avg_rating'] : 0;
                                     ?>
                                     <small class="d-block mb-1">
-                                        Rating: <?php echo number_format($avg, 1); ?>
+                                        Rating: <?php echo number_format($averageRating, 1); ?>
                                     </small>
                                     <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="btn btn-primary btn-sm">
                                         View
