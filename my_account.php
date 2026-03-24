@@ -2,30 +2,17 @@
 include(__DIR__ . "/includes/db.php");
 include(__DIR__ . "/includes/header.php");
 
-// Handles review updates
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_review"])) {
-    // Require login before allowing updates
-    if (!isset($_SESSION["user_id"])) {
-        header("Location: login.php");
-        exit;
-    }
-
-    $review_id = (int)$_POST["review_id"];
-    $rating    = (int)$_POST["rating"];
-    $comment   = $_POST["comment"];
-
-    $stmt = $conn->prepare("
-        UPDATE reviews 
-        SET rating = ?, comment = ? 
-        WHERE review_id = ? AND user_id = ?
-    ");
-    $stmt->bind_param("isii", $rating, $comment, $review_id, $_SESSION["user_id"]);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: my_account.php?tab=reviews");
+// Require login
+if (!isset($_SESSION["user_id"])) {
+    echo "You must be logged in to view your account.";
+    include("includes/footer.php");
     exit;
 }
+
+$user_id = (int)$_SESSION["user_id"];
+
+// Which tab
+$tab = isset($_GET['tab']) ? $_GET['tab'] : 'reviews';
 
 // Requires login
 if (!isset($_SESSION["user_id"])) {
@@ -159,7 +146,7 @@ $stmt->close();
 
               <!-- Edit Form (form is hidden) -->
               <div id="edit-form-<?php echo $row['review_id']; ?>" style="display:none;" class="mt-3">
-                <form method="POST">
+                <form method="POST" action="handlers/update_review.php">
                   <input type="hidden" name="review_id" value="<?php echo $row['review_id']; ?>">
 
                   <!-- Editable rating -->
@@ -270,9 +257,9 @@ $stmt->close();
 
 <hr>
 
-<h4>Permanently delete my account / data</h4>
+<h4>Permanently delete my account & my data</h4>
 
-<form method="POST" action="deleted_account.php"
+<form method="POST" action="handlers/deleted_account.php"
       onsubmit="return confirm('Are you sure you want to delete your account and all it's associated data including reviews and favourites? This can NOT be undone.');">
   <button type="submit" class="btn btn-danger">
     Delete my account
