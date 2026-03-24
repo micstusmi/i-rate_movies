@@ -6,7 +6,7 @@ include(__DIR__ . "/includes/header.php");
 
 $genre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $year  = isset($_GET['year'])  ? $_GET['year']  : 'all';
-$sort  = isset($_GET['sort'])  ? $_GET['sort']  : 'year_desc';
+$sort  = isset($_GET['sort'])  ? $_GET['sort']  : 'random';
 
 // Gets distinct genres from movies
 
@@ -71,8 +71,11 @@ switch ($sort) {
         $orderBy = "ORDER BY `year` ASC, title ASC";
         break;
     case 'year_desc':
-    default:
         $orderBy = "ORDER BY `year` DESC, title ASC";
+        break;
+    case 'random':
+    default:
+        $orderBy = "ORDER BY RAND()";
         break;
 }
 
@@ -155,16 +158,19 @@ $result = $stmt->get_result();
                         <input type="hidden" name="year"  value="<?php echo htmlspecialchars($year); ?>">
 
                         <select name="sort" class="form-select" onchange="this.form.submit()">
+                            <option value="random" <?php echo ($sort === 'random') ? 'selected' : ''; ?>>
+                                Random
+                                </option>
                             <option value="rating_desc" <?php echo ($sort === 'rating_desc') ? 'selected' : ''; ?>>
                                 Highest Rated
                             </option>
                             <option value="year_asc" <?php echo ($sort === 'year_asc') ? 'selected' : ''; ?>>
                                 Year Made (Oldest First)
                             </option>
-                            <option value="year_desc" <?php echo ($sort === 'year_desc') ? 'selected' : ''; ?>>
-                                Year Made (Newest First)
-                            </option>
-                        </select>
+                        <option value="year_desc" <?php echo ($sort === 'year_desc') ? 'selected' : ''; ?>>
+        Year Made (Newest First)
+    </option>
+</select>
                     </div>
                 </form>
             </div>
