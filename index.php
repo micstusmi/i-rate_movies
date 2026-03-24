@@ -2,7 +2,7 @@
 include(__DIR__ . "/includes/db.php");
 include(__DIR__ . "/includes/header.php");
 
-// Reads filter/sort values from query string
+// Reads filter / sorts values from query string
 
 $genre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $year  = isset($_GET['year'])  ? $_GET['year']  : 'all';
@@ -21,7 +21,7 @@ while ($row = $genresResult->fetch_assoc()) {
     $genres[] = $row['genre'];
 }
 
-// Defines static year ranges
+// Defines year ranges
 
 $yearRanges = [
     '1941-1950' => [1941, 1950],
@@ -35,7 +35,7 @@ $yearRanges = [
     '2021-2030' => [2021, 2030],
 ];
 
-// Builds WHERE conditions
+// Builds 'WHERE' conditions
 
 $where  = [];
 $params = [];
@@ -153,7 +153,7 @@ $result = $stmt->get_result();
                     <div class="mb-3">
                         <h6 class="mb-2">Sort by</h6>
 
-                        <!-- Preserve current genre/year when changing sort -->
+                        <!-- Preserves current genre/year when changing sort -->
                         <input type="hidden" name="genre" value="<?php echo htmlspecialchars($genre); ?>">
                         <input type="hidden" name="year"  value="<?php echo htmlspecialchars($year); ?>">
 

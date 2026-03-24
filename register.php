@@ -18,10 +18,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $alias = $_POST["alias"];
     $password = $_POST["password"];
 
-    // Hash password
+    // Hashed password for secure encryption
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    // Check if email or alias already exists
+    // Checks if email or alias already exists
     $check = $conn->prepare("SELECT user_id FROM users WHERE email = ? OR alias = ?");
     $check->bind_param("ss", $email, $alias);
     $check->execute();
@@ -30,25 +30,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($check->num_rows > 0) {
         $message = "Email or alias already exists.";
     } else {
-        // Insert user
+        // Inserts user
         $stmt = $conn->prepare("INSERT INTO users (email, password, alias) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $email, $hashedPassword, $alias);
 
         if ($stmt->execute()) {
     
-            // Get the new user's ID
+            // Gets the new user's ID
             $newUserId = $stmt->insert_id;
         
-            // Start session (if not already started)
+            // Starts session (if not already started)
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
         
-            // Log user in automatically
+            // Logs user in automatically
             $_SESSION["user_id"] = $newUserId;
             $_SESSION["alias"] = $alias;
         
-            // Redirect to homepage
+            // Redirects to homepage
             header("Location: index.php");
             exit;
         

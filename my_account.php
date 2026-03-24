@@ -36,7 +36,7 @@ if (!isset($_SESSION["user_id"])) {
 
 $user_id = (int)$_SESSION["user_id"];
 
-// Which section (tab) to show: 'reviews' or 'favourites'
+// Which section to show: 'reviews' tab or 'favourites' tab
 $tab = isset($_GET['tab']) ? $_GET['tab'] : 'reviews';
 
 //
@@ -157,7 +157,7 @@ $stmt->close();
                 <?php echo htmlspecialchars($row['created_at']); ?>
               </small>
 
-              <!-- EDIT FORM (form is hidden) -->
+              <!-- Edit Form (form is hidden) -->
               <div id="edit-form-<?php echo $row['review_id']; ?>" style="display:none;" class="mt-3">
                 <form method="POST">
                   <input type="hidden" name="review_id" value="<?php echo $row['review_id']; ?>">
@@ -166,7 +166,7 @@ $stmt->close();
                   <div class="mb-2">
                     <label class="form-label d-block">Rating (1–5)</label>
 
-                    <!-- hidden input that PHP will read as $_POST['rating'] -->
+                    <!-- hidden input that PHP will read -->
                     <input type="hidden"
                            name="rating"
                            id="rating-value-<?php echo $row['review_id']; ?>"
@@ -203,7 +203,7 @@ $stmt->close();
               </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
+            <!-- Action Buttons -->
             <div class="text-end">
               <!-- Toggle edit -->
               <button class="btn btn-sm btn-outline-primary mb-1"

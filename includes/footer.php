@@ -4,7 +4,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  // Generic function to wire up a star rating widget
+  // Function for a star rating widget
   function setupStarWidget(container, hiddenInput, textEl, initialRating) {
     if (!container || !hiddenInput) return;
 
@@ -49,13 +49,13 @@ document.addEventListener('DOMContentLoaded', function () {
       setStars(selected);
     });
 
-    // Initialize with existing rating if provided
+    // Initialise with existing rating (if provided)
     if (initialRating) {
       setStars(initialRating);
     }
   }
 
-  // === 1) Movie page: new-review widget (id="star-rating") ===
+  // Movie page: new-review widget (id="star-rating")
   (function () {
     const container = document.getElementById('star-rating');
     const input     = document.getElementById('rating-value');
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })();
 
-  // === 2) Movie page: edit-review widget (id="edit-star-rating") ===
+  // Movie page: edit-review widget (id="edit-star-rating")
   (function () {
     const container = document.getElementById('edit-star-rating');
     const input     = document.getElementById('edit-rating-value');
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })();
 
-  // === 3) My account page: many edit widgets, ids like "star-rating-<id>" ===
+  // My account page: many edit widgets, ids like "star-rating-<id>"
   (function () {
     const containers = document.querySelectorAll('[id^="star-rating-"]');
     containers.forEach(container => {
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   })();
 
-  // === 4) Toggle edit form for "my review" on movie page ===
+  // Toggle edit form for "my review" on movie page 
   (function () {
     const editBtn        = document.getElementById('edit-my-review-btn');
     const editForm       = document.getElementById('edit-my-review-form');

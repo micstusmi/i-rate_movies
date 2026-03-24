@@ -9,16 +9,16 @@ if (!isset($_SESSION["user_id"])) {
 
 $user_id = $_SESSION["user_id"];
 
-// Delete user (reviews should auto-delete if CASCADE is set)
+// Delete user
 $stmt = $conn->prepare("DELETE FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 
-// 🔥 IMPORTANT: destroy session
+// Destroys Session
 session_unset();
 session_destroy();
 
-// Redirect to homepage or login
+// Redirects to homepage or login
 header("Location: index.php");
 exit;
 ?>

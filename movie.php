@@ -4,7 +4,7 @@ session_start();
 include(__DIR__ . "/includes/db.php");
 include(__DIR__ . "/includes/header.php");
 
-// 1) Checks if ID exists in URL
+// Checks if ID exists in URL
 if (!isset($_GET["id"])) {
     echo "Movie not found.";
     exit;
@@ -12,7 +12,7 @@ if (!isset($_GET["id"])) {
 
 $id = (int)$_GET["id"];  // movie_id
 
-// 2) Fetches movie data first
+// Fetches movie data first
 $stmt = $conn->prepare("SELECT * FROM movies WHERE movie_id = ?");
 if (!$stmt) {
     die("Prepare failed: " . $conn->error);
@@ -29,10 +29,10 @@ if ($result->num_rows !== 1) {
 $movie = $result->fetch_assoc();
 $stmt->close();
 
-// --- Handles POST actions: favourites + reviews ---
+// --- Handles 'POST' actions: favourites + reviews ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // FAVOURITES: do not require a rating or a comment, just requires login
+    // 'FAVOURITES': do not require a rating or a comment, just requires login
     if (isset($_POST['add_favorite']) || isset($_POST['remove_favorite'])) {
         if (!isset($_SESSION["user_id"])) {
             echo "You must be logged in to perform this action.";
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // REVIEW ACTIONS (create / update / delete)
+    // Review Actions (create / update / delete)
     if (!isset($_SESSION["user_id"])) {
         echo "You must be logged in to perform this action.";
         exit;
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id  = (int)$_SESSION["user_id"];
     $movie_id = $id;
 
-    // DELETES review
+    // Deletes review
     if (isset($_POST['delete_review'])) {
         $review_id = (int)$_POST['review_id'];
 
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // CREATES or UPDATES review
+    // Creates or Updates user's review
     $rating  = (int)($_POST["rating"] ?? 0);
     $comment = $_POST["comment"] ?? '';
 
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['update_review']) && isset($_POST['review_id'])) {
-        // UPDATES existing review
+        // Updates existing review
         $review_id = (int)$_POST['review_id'];
 
         $stmt = $conn->prepare("
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
 
     } elseif (isset($_POST['submit_review'])) {
-        // CREATES a new review
+        // Creates a new review
         $stmt = $conn->prepare("
             INSERT INTO reviews (user_id, movie_id, rating, comment)
             VALUES (?, ?, ?, ?)
