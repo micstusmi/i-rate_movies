@@ -257,13 +257,15 @@ $stmt->close();
 
 <hr>
 
-<h4>Permanently delete my account & my data</h4>
+<h4>Permanently delete my account & data</h4>
 
 <form method="POST" action="handlers/deleted_account.php"
-      onsubmit="return confirm('Are you sure you want to delete your account and all it's associated data including reviews and favourites? This can NOT be undone.');">
+      onsubmit="return confirm('Are you sure you want to delete your account and all associated data? This cannot be undone.');">
+
   <button type="submit" class="btn btn-danger">
     Delete my account
   </button>
+
 </form>
 
 <!-- Toggle script -->
