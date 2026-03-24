@@ -2,11 +2,17 @@
 include(__DIR__ . "/includes/db.php");
 include(__DIR__ . "/includes/header.php");
 
-// Handle review update
+// Handles review updates
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_review"])) {
+    // Require login before allowing updates
+    if (!isset($_SESSION["user_id"])) {
+        header("Location: login.php");
+        exit;
+    }
+
     $review_id = (int)$_POST["review_id"];
-    $rating = (int)$_POST["rating"];
-    $comment = $_POST["comment"];
+    $rating    = (int)$_POST["rating"];
+    $comment   = $_POST["comment"];
 
     $stmt = $conn->prepare("
         UPDATE reviews 
@@ -15,12 +21,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_review"])) {
     ");
     $stmt->bind_param("isii", $rating, $comment, $review_id, $_SESSION["user_id"]);
     $stmt->execute();
+    $stmt->close();
 
-    header("Location: my_account.php");
+    header("Location: my_account.php?tab=reviews");
     exit;
 }
 
-// Require login
+// Requires login
 if (!isset($_SESSION["user_id"])) {
     echo "You must be logged in to view your account.";
     include("includes/footer.php");
@@ -29,7 +36,12 @@ if (!isset($_SESSION["user_id"])) {
 
 $user_id = (int)$_SESSION["user_id"];
 
-// Get user info
+// Which section (tab) to show: 'reviews' or 'favourites'
+$tab = isset($_GET['tab']) ? $_GET['tab'] : 'reviews';
+
+//
+// Gets user's info
+//
 $stmt = $conn->prepare("SELECT alias, email, created_at FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -44,7 +56,9 @@ if ($userResult->num_rows !== 1) {
 
 $user = $userResult->fetch_assoc();
 
-// Get reviews
+//
+// Gets user's reviews
+//
 $sql = "
     SELECT r.review_id, r.movie_id, r.rating, r.comment, r.created_at,
            m.title
@@ -57,6 +71,21 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $reviewsResult = $stmt->get_result();
+$stmt->close();
+
+// Gets user's favourites
+
+$favSql = "
+    SELECT m.movie_id, m.title, m.image_url, m.genre, m.year
+    FROM user_favorites uf
+    JOIN movies m ON uf.movie_id = m.movie_id
+    WHERE uf.user_id = ?
+    ORDER BY m.title ASC
+";
+$stmt = $conn->prepare($favSql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$favouritesResult = $stmt->get_result();
 $stmt->close();
 ?>
 
@@ -75,124 +104,176 @@ $stmt->close();
 
 <hr>
 
-<h4>My reviews</h4>
+<!-- Tabs (My reviews / My favourites) -->
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item">
+    <a class="nav-link <?php echo ($tab === 'reviews') ? 'active' : ''; ?>"
+       href="my_account.php?tab=reviews">
+      My reviews
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo ($tab === 'favourites') ? 'active' : ''; ?>"
+       href="my_account.php?tab=favourites">
+      My favourites
+    </a>
+  </li>
+</ul>
 
-<?php if ($reviewsResult->num_rows === 0): ?>
-  <p>You haven’t written any reviews yet.</p>
-<?php else: ?>
-  <div class="list-group mb-4">
-    <?php while ($row = $reviewsResult->fetch_assoc()): ?>
-      <div class="list-group-item">
+<?php if ($tab === 'reviews'): ?>
 
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
+  <h4>My reviews</h4>
 
-            <h5>
-              <a href="movie.php?id=<?php echo (int)$row['movie_id']; ?>">
-                <?php echo htmlspecialchars($row['title']); ?>
-              </a>
-            </h5>
-
-            <!-- ⭐ Stars display -->
+  <?php if ($reviewsResult->num_rows === 0): ?>
+    <p>You haven’t written any reviews yet.</p>
+  <?php else: ?>
+    <div class="list-group mb-4">
+      <?php while ($row = $reviewsResult->fetch_assoc()): ?>
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
             <div>
-              <?php for ($i = 1; $i <= 5; $i++): ?>
-                <?php if ($i <= $row['rating']): ?>
-                  <span class="text-warning">&#9733;</span>
-                <?php else: ?>
-                  <span class="text-secondary">&#9733;</span>
-                <?php endif; ?>
-              <?php endfor; ?>
+              <h5>
+                <a href="movie.php?id=<?php echo (int)$row['movie_id']; ?>">
+                  <?php echo htmlspecialchars($row['title']); ?>
+                </a>
+              </h5>
+
+              <!-- read-only Stars display  -->
+              <div>
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                  <?php if ($i <= $row['rating']): ?>
+                    <span class="text-warning">&#9733;</span>
+                  <?php else: ?>
+                    <span class="text-secondary">&#9733;</span>
+                  <?php endif; ?>
+                <?php endfor; ?>
+              </div>
+
+              <?php if (!empty($row['comment'])): ?>
+                <p><?php echo nl2br(htmlspecialchars($row['comment'])); ?></p>
+              <?php endif; ?>
+
+              <small class="text-muted">
+                <?php echo htmlspecialchars($row['created_at']); ?>
+              </small>
+
+              <!-- EDIT FORM (form is hidden) -->
+              <div id="edit-form-<?php echo $row['review_id']; ?>" style="display:none;" class="mt-3">
+                <form method="POST">
+                  <input type="hidden" name="review_id" value="<?php echo $row['review_id']; ?>">
+
+                  <!-- Editable rating -->
+                  <div class="mb-2">
+                    <label class="form-label d-block">Rating (1–5)</label>
+
+                    <!-- hidden input that PHP will read as $_POST['rating'] -->
+                    <input type="hidden"
+                           name="rating"
+                           id="rating-value-<?php echo $row['review_id']; ?>"
+                           value="<?php echo (int)$row['rating']; ?>"
+                           required>
+
+                    <!-- clickable stars, unique per review -->
+                    <div id="star-rating-<?php echo $row['review_id']; ?>"
+                         data-initial-rating="<?php echo (int)$row['rating']; ?>">
+                      <i class="bi bi-star star" data-value="1"></i>
+                      <i class="bi bi-star star" data-value="2"></i>
+                      <i class="bi bi-star star" data-value="3"></i>
+                      <i class="bi bi-star star" data-value="4"></i>
+                      <i class="bi bi-star star" data-value="5"></i>
+                    </div>
+
+                    <small id="rating-text-<?php echo $row['review_id']; ?>" class="text-muted"></small>
+                  </div>
+
+                  <div class="mb-2">
+                    <label>Comment</label>
+                    <textarea name="comment" class="form-control"><?php echo htmlspecialchars($row['comment']); ?></textarea>
+                  </div>
+
+                  <button type="submit" name="update_review" class="btn btn-success btn-sm">
+                    Save changes
+                  </button>
+                  <button type="button"
+                          class="btn btn-sm btn-secondary"
+                          onclick="cancelEdit(<?php echo $row['review_id']; ?>)">
+                    Cancel
+                  </button>
+                </form>
+              </div>
             </div>
 
-            <?php if (!empty($row['comment'])): ?>
-              <p><?php echo nl2br(htmlspecialchars($row['comment'])); ?></p>
-            <?php endif; ?>
+            <!-- ACTION BUTTONS -->
+            <div class="text-end">
+              <!-- Toggle edit -->
+              <button class="btn btn-sm btn-outline-primary mb-1"
+                      onclick="toggleEdit(<?php echo $row['review_id']; ?>)">
+                <i class="bi bi-pencil"></i>
+              </button>
 
-            <small class="text-muted">
-              <?php echo htmlspecialchars($row['created_at']); ?>
-            </small>
-
-            <!-- ✏️ EDIT FORM (hidden) -->
-            <div id="edit-form-<?php echo $row['review_id']; ?>" style="display:none;" class="mt-3">
-
-  <form method="POST">
-    <input type="hidden" name="review_id" value="<?php echo $row['review_id']; ?>">
-
-    <!-- ⭐ Editable stars using Bootstrap Icons -->
-    <div class="mb-2">
-      <label class="form-label d-block">Rating (1–5)</label>
-
-      <!-- hidden input that PHP will read as $_POST['rating'] -->
-      <input type="hidden"
-             name="rating"
-             id="rating-value-<?php echo $row['review_id']; ?>"
-             value="<?php echo (int)$row['rating']; ?>"
-             required>
-
-      <!-- clickable stars, unique per review -->
-      <div id="star-rating-<?php echo $row['review_id']; ?>"
-           data-initial-rating="<?php echo (int)$row['rating']; ?>">
-        <i class="bi bi-star star" data-value="1"></i>
-        <i class="bi bi-star star" data-value="2"></i>
-        <i class="bi bi-star star" data-value="3"></i>
-        <i class="bi bi-star star" data-value="4"></i>
-        <i class="bi bi-star star" data-value="5"></i>
-      </div>
-
-      <small id="rating-text-<?php echo $row['review_id']; ?>" class="text-muted"></small>
-    </div>
-
-                <div class="mb-2">
-                  <label>Comment</label>
-                  <textarea name="comment" class="form-control"><?php echo htmlspecialchars($row['comment']); ?></textarea>
-                </div>
-
-                <button type="submit" name="update_review" class="btn btn-success btn-sm">
-                  Save changes
-                  <button type="button"
-                    class="btn btn-sm btn-secondary"
-                        onclick="cancelEdit(<?php echo $row['review_id']; ?>)">
-                    Cancel
+              <!-- Delete -->
+              <form method="POST" action="delete_review.php">
+                <input type="hidden" name="review_id" value="<?php echo $row['review_id']; ?>">
+                <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Delete this review?');">
+                  <i class="bi bi-trash"></i>
                 </button>
               </form>
-
             </div>
-
           </div>
-
-          <!-- ACTION BUTTONS -->
-          <div class="text-end">
-
-            <!-- ✏️ Toggle edit -->
-            <button class="btn btn-sm btn-outline-primary mb-1"
-                    onclick="toggleEdit(<?php echo $row['review_id']; ?>)">
-              <i class="bi bi-pencil"></i>
-            </button>
-
-            <!-- 🗑 Delete -->
-            <form method="POST" action="delete_review.php">
-              <input type="hidden" name="review_id" value="<?php echo $row['review_id']; ?>">
-              <button type="submit" class="btn btn-sm btn-danger"
-                      onclick="return confirm('Delete this review?');">
-                <i class="bi bi-trash"></i>
-              </button>
-            </form>
-
-          </div>
-
         </div>
+      <?php endwhile; ?>
+    </div>
+  <?php endif; ?>
 
-      </div>
-    <?php endwhile; ?>
-  </div>
+<?php elseif ($tab === 'favourites'): ?>
+
+  <h4>My favourites</h4>
+
+  <?php if ($favouritesResult->num_rows === 0): ?>
+    <p>You don’t have any favourite movies yet.</p>
+  <?php else: ?>
+    <div class="row mb-4">
+      <?php while ($fav = $favouritesResult->fetch_assoc()): ?>
+        <div class="col-md-3 mb-3">
+          <div class="card h-100">
+            <?php if (!empty($fav['image_url'])): ?>
+              <img src="<?php echo htmlspecialchars($fav['image_url']); ?>"
+                   class="card-img-top"
+                   alt="Movie image">
+            <?php endif; ?>
+            <div class="card-body">
+              <h6 class="card-title">
+                <a href="movie.php?id=<?php echo (int)$fav['movie_id']; ?>">
+                  <?php echo htmlspecialchars($fav['title']); ?>
+                </a>
+              </h6>
+              <?php if (!empty($fav['genre']) || !empty($fav['year'])): ?>
+                <p class="card-text small text-muted mb-0">
+                  <?php if (!empty($fav['genre'])): ?>
+                    <?php echo htmlspecialchars($fav['genre']); ?>
+                  <?php endif; ?>
+                  <?php if (!empty($fav['year'])): ?>
+                    <?php if (!empty($fav['genre'])) echo ' • '; ?>
+                    <?php echo (int)$fav['year']; ?>
+                  <?php endif; ?>
+                </p>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      <?php endwhile; ?>
+    </div>
+  <?php endif; ?>
+
 <?php endif; ?>
 
 <hr>
 
-<h4>Delete my account and data</h4>
+<h4>Permanently delete my account and all associated data</h4>
 
 <form method="POST" action="deleted_account.php"
-      onsubmit="return confirm('Are you sure you want to delete your account and ALL your reviews?');">
+      onsubmit="return confirm('Are you sure you want to delete your account and ALL your favourites / reviews?');">
   <button type="submit" class="btn btn-danger">
     Delete my account
   </button>
