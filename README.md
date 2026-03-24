@@ -1,6 +1,17 @@
-i-rate movies brief and setup info:
+i-rate movies setup info:
 
-Is a simple web app for rating and reviewing movies developed by Michael and Wendy using mostly PHP/MySQL as well as a little bit of HTML & Java.
+Setup (For Wendy / Vivian)
+
+1. Download the repository from GitHub.
+2. Save everything in C:\xampp\htdocs\i-rate_movies\
+3. Create a MySQL database called i-rate_movies and import the SQL schema found in the database folder from the download.
+4. Open a browser page and put http://localhost/i-rate_movies/ into the URL and you should see the website working.
+
+-----------------------------------------------------------------
+
+Brief:
+
+i-rate movies is a simple web app for rating and reviewing movies developed by Michael and Wendy using mostly PHP/MySQL as well as a little bit of HTML & Java.
 Front end users can register, log in/out, browse movies, leave star reviews from 1–5 and add comments. Users can also manage their own reviews and their accounts and delete their accounts if they wish.
 
 Features
@@ -16,12 +27,5 @@ Web Dev Tech Stack
 
 - PHP
 - MySQL
-- Bootstrap for layout/styling
-- Pencil / stars / bin icons from bootstrap
+- Bootstrap for layout/styling plus pencil / stars / bin icons.
 - Xampp for database tables and for local database hosting / developing.
-
-Setup (For Wendy / Vivian)
-
-1. Download the repository from GitHub
-2. Save everything in C:\xampp\htdocs\i-rate_movies\
-3. Create a MySQL database called i-rate_movies and import the SQL schema:
