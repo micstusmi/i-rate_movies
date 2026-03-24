@@ -8,8 +8,8 @@
 
 <?php
 
-include("includes/header.php");
 include(__DIR__ . "/includes/db.php");
+include(__DIR__ . "/includes/header.php");
 
 $message = "";
 
@@ -35,7 +35,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("sss", $email, $hashedPassword, $alias);
 
         if ($stmt->execute()) {
-            $message = "Registration successful!";
+    
+            // Get the new user's ID
+            $newUserId = $stmt->insert_id;
+        
+            // Start session (if not already started)
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+        
+            // Log user in automatically
+            $_SESSION["user_id"] = $newUserId;
+            $_SESSION["alias"] = $alias;
+        
+            // Redirect to homepage
+            header("Location: index.php");
+            exit;
+        
         } else {
             $message = "Error: " . $conn->error;
         }
@@ -63,8 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   <button type="submit" class="btn btn-primary">Register</button>
 </form>
-
-<p class="mt-3"><?php echo $message; ?></p>
 
 <p class="mt-3"><?php echo $message; ?></p>
 

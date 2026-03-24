@@ -1,6 +1,6 @@
 <?php
-include("includes/header.php");
 include(__DIR__ . "/includes/db.php");
+include(__DIR__ . "/includes/header.php");
 
 // Fetch movies
 $result = $conn->query("SELECT * FROM movies");

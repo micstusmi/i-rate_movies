@@ -23,6 +23,7 @@ if (isset($_SESSION["user_id"])) {
 <head>
     <title>i-rate Movies</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
 
@@ -32,7 +33,6 @@ if (isset($_SESSION["user_id"])) {
     <a class="navbar-brand" href="index.php">i-rate Movies</a>
 
     <?php if (isset($_SESSION["user_id"])): ?>
-
       <span class="text-white me-3">
         Hello,
         <a href="my_account.php" class="text-white text-decoration-underline">

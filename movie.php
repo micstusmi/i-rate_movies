@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-include("includes/header.php");
 include(__DIR__ . "/includes/db.php");
+include(__DIR__ . "/includes/header.php");
 
 // 1) Check if ID exists in URL
 if (!isset($_GET["id"])) {
@@ -10,7 +10,7 @@ if (!isset($_GET["id"])) {
     exit;
 }
 
-$id = (int)$_GET["id"];  // this will be used as movie_id
+$id = (int)$_GET["id"];  // movie_id
 
 // 2) Fetch movie data first
 $stmt = $conn->prepare("SELECT * FROM movies WHERE movie_id = ?");
@@ -29,39 +29,109 @@ if ($result->num_rows !== 1) {
 $movie = $result->fetch_assoc();
 $stmt->close();
 
-// 3) Handle review submission
-if (isset($_POST["submit_review"])) {
+// 3) Handle review actions: create / update / delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!isset($_SESSION["user_id"])) {
-        echo "You must be logged in to leave a review.";
+        echo "You must be logged in to perform this action.";
         exit;
     }
 
     $user_id  = (int)$_SESSION["user_id"];
-    $movie_id = $id; // same as in URL / used above
-    $rating   = (int)$_POST["rating"];
-    $comment  = $_POST["comment"];
+    $movie_id = $id;
 
-    $stmt = $conn->prepare(
-        "INSERT INTO reviews (user_id, movie_id, rating, comment)
-         VALUES (?, ?, ?, ?)"
-    );
-    if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
+    // DELETE
+    if (isset($_POST['delete_review'])) {
+        $review_id = (int)$_POST['review_id'];
+
+        $stmt = $conn->prepare("DELETE FROM reviews WHERE review_id = ? AND user_id = ?");
+        if (!$stmt) {
+            die("Prepare failed: " . $conn->error);
+        }
+        $stmt->bind_param("ii", $review_id, $user_id);
+        $stmt->execute();
+        $stmt->close();
+
+        header("Location: movie.php?id=" . $id);
+        exit;
     }
 
-    $stmt->bind_param("iiis", $user_id, $movie_id, $rating, $comment);
+    // CREATE or UPDATE
+    $rating  = (int)($_POST["rating"] ?? 0);
+    $comment = $_POST["comment"] ?? '';
 
-    if (!$stmt->execute()) {
-        die("Execute failed: " . $stmt->error);
+    if ($rating < 1 || $rating > 5) {
+        echo "Invalid rating.";
+        exit;
     }
 
-    $stmt->close();
+    if (isset($_POST['update_review']) && isset($_POST['review_id'])) {
+        // UPDATE existing review
+        $review_id = (int)$_POST['review_id'];
+
+        $stmt = $conn->prepare("
+            UPDATE reviews
+            SET rating = ?, comment = ?
+            WHERE review_id = ? AND user_id = ?
+        ");
+        if (!$stmt) {
+            die("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param("isii", $rating, $comment, $review_id, $user_id);
+        $stmt->execute();
+        $stmt->close();
+
+    } elseif (isset($_POST['submit_review'])) {
+        // CREATE new review
+        $stmt = $conn->prepare("
+            INSERT INTO reviews (user_id, movie_id, rating, comment)
+            VALUES (?, ?, ?, ?)
+        ");
+        if (!$stmt) {
+            die("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param("iiis", $user_id, $movie_id, $rating, $comment);
+        $stmt->execute();
+        $stmt->close();
+    }
 
     // Avoid resubmit on refresh
     header("Location: movie.php?id=" . $id);
     exit;
 }
+
+// --- Fetch reviews for this movie ---
+$userReview    = null;
+$otherReviews  = [];
+$loggedInUserId = isset($_SESSION["user_id"]) ? (int)$_SESSION["user_id"] : null;
+
+// Fetch all reviews with user info
+$stmt = $conn->prepare("
+    SELECT r.review_id, r.user_id, r.rating, r.comment, r.created_at,
+           u.alias
+    FROM reviews r
+    JOIN users u ON r.user_id = u.user_id
+    WHERE r.movie_id = ?
+    ORDER BY r.created_at DESC
+");
+if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+}
+
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$reviewsResult = $stmt->get_result();
+
+while ($row = $reviewsResult->fetch_assoc()) {
+    if ($loggedInUserId && $row['user_id'] == $loggedInUserId) {
+        $userReview = $row;          // current user's review
+    } else {
+        $otherReviews[] = $row;      // everyone else's reviews
+    }
+}
+$stmt->close();
 ?>
 
 <div class="row">
@@ -88,31 +158,173 @@ if (isset($_POST["submit_review"])) {
 
     <?php if (isset($_SESSION["user_id"])): ?>
 
-      <form method="POST">
-        <div class="mb-3">
-          <label class="form-label">Rating (1–5)</label>
-          <select name="rating" class="form-control" required>
-            <option value="">Select rating</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </div>
+      <?php if (!$userReview): ?>
+        <!-- No review yet: show create form -->
+        <form method="POST" id="new-review-form">
+          <div class="mb-3">
+            <label class="form-label d-block">Rating (1–5)</label>
 
-        <div class="mb-3">
-          <label class="form-label">Comment</label>
-          <textarea name="comment" class="form-control"></textarea>
-        </div>
+            <!-- hidden input that PHP reads as $_POST['rating'] -->
+            <input type="hidden" name="rating" id="rating-value" required>
 
-        <button type="submit" name="submit_review" class="btn btn-primary">
-          Submit Review
-        </button>
-      </form>
+            <!-- clickable stars -->
+            <div id="star-rating">
+              <i class="bi bi-star star" data-value="1"></i>
+              <i class="bi bi-star star" data-value="2"></i>
+              <i class="bi bi-star star" data-value="3"></i>
+              <i class="bi bi-star star" data-value="4"></i>
+              <i class="bi bi-star star" data-value="5"></i>
+            </div>
+
+            <small id="rating-text" class="text-muted"></small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Comment</label>
+            <textarea name="comment" class="form-control"></textarea>
+          </div>
+
+          <button type="submit" name="submit_review" class="btn btn-primary">
+            Submit Review
+          </button>
+        </form>
+
+      <?php else: ?>
+        <!-- You already have a review: show it + edit/delete controls -->
+
+        <div class="card mb-4" id="my-review-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="card-title mb-1">Your review</h5>
+                <div class="mb-2">
+                  <?php
+                  // simple star display for your rating
+                  for ($i = 1; $i <= 5; $i++) {
+                      if ($i <= (int)$userReview['rating']) {
+                          echo '<i class="bi bi-star-fill text-warning"></i>';
+                      } else {
+                          echo '<i class="bi bi-star text-muted"></i>';
+                      }
+                  }
+                  ?>
+                  <small class="text-muted">
+                    (<?php echo (int)$userReview['rating']; ?>/5)
+                  </small>
+                </div>
+              </div>
+
+              <div>
+                <!-- Edit button (pencil) -->
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        id="edit-my-review-btn">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <!-- Delete form (trash) -->
+                <form method="POST" class="d-inline"
+                      onsubmit="return confirm('Delete your review?');">
+                  <input type="hidden" name="review_id"
+                         value="<?php echo (int)$userReview['review_id']; ?>">
+                  <button type="submit" name="delete_review"
+                          class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <p class="card-text mt-2" id="my-review-comment-display">
+              <?php echo nl2br(htmlspecialchars($userReview['comment'])); ?>
+            </p>
+
+            <small class="text-muted">
+              Posted on <?php echo htmlspecialchars($userReview['created_at']); ?>
+            </small>
+
+            <!-- Hidden edit form (shown when clicking the pencil) -->
+            <form method="POST" id="edit-my-review-form" class="mt-3 d-none">
+              <input type="hidden" name="review_id"
+                     value="<?php echo (int)$userReview['review_id']; ?>">
+
+              <div class="mb-2">
+                <label class="form-label d-block">Rating (1–5)</label>
+                <input type="hidden" name="rating" id="edit-rating-value" required>
+                <div id="edit-star-rating" data-initial-rating="<?php echo (int)$userReview['rating']; ?>">
+                  <i class="bi bi-star star" data-value="1"></i>
+                  <i class="bi bi-star star" data-value="2"></i>
+                  <i class="bi bi-star star" data-value="3"></i>
+                  <i class="bi bi-star star" data-value="4"></i>
+                  <i class="bi bi-star star" data-value="5"></i>
+                </div>
+                <small class="text-muted" id="edit-rating-text"></small>
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Comment</label>
+                <textarea name="comment" class="form-control"
+                          rows="3"><?php echo htmlspecialchars($userReview['comment']); ?></textarea>
+              </div>
+
+              <button type="submit" name="update_review"
+                      class="btn btn-sm btn-primary">
+                Save changes
+              </button>
+              <button type="button" class="btn btn-sm btn-secondary"
+                      id="cancel-edit-my-review">
+                Cancel
+              </button>
+            </form>
+          </div>
+        </div>
+      <?php endif; ?>
 
     <?php else: ?>
       <p>Please <a href="login.php">log in</a> to leave a review.</p>
+    <?php endif; ?>
+
+    <h4 class="mt-4">All Reviews</h4>
+
+    <?php if (!$userReview && count($otherReviews) === 0): ?>
+      <p>No reviews yet. Be the first to review this movie!</p>
+    <?php else: ?>
+
+      <?php foreach ($otherReviews as $review): ?>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-1">
+                  <?php echo htmlspecialchars($review['alias']); ?>
+                </h6>
+                <div class="mb-1">
+                  <?php
+                  for ($i = 1; $i <= 5; $i++) {
+                      if ($i <= (int)$review['rating']) {
+                          echo '<i class="bi bi-star-fill text-warning"></i>';
+                      } else {
+                          echo '<i class="bi bi-star text-muted"></i>';
+                      }
+                  }
+                  ?>
+                  <small class="text-muted">
+                    (<?php echo (int)$review['rating']; ?>/5)
+                  </small>
+                </div>
+              </div>
+              <small class="text-muted">
+                <?php echo htmlspecialchars($review['created_at']); ?>
+              </small>
+            </div>
+
+            <p class="card-text mt-2">
+              <?php echo nl2br(htmlspecialchars($review['comment'])); ?>
+            </p>
+          </div>
+        </div>
+      <?php endforeach; ?>
+
     <?php endif; ?>
   </div>
 </div>
