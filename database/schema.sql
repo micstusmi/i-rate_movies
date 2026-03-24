@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 24, 2026 at 10:31 AM
+-- Generation Time: Mar 24, 2026 at 11:40 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -216,7 +216,15 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   PRIMARY KEY (`review_id`),
   KEY `user_id` (`user_id`),
   KEY `movie_id` (`movie_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `reviews`
+--
+
+INSERT INTO `reviews` (`review_id`, `user_id`, `movie_id`, `rating`, `comment`, `created_at`) VALUES
+(9, 5, 19, 5, 'ghaghera', '2026-03-24 10:34:56'),
+(10, 5, 27, 5, 'mhgdjkt', '2026-03-24 10:35:08');
 
 -- --------------------------------------------------------
 
@@ -235,14 +243,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `alias` (`alias`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`user_id`, `alias`, `email`, `password`, `role`, `created_at`) VALUES
-(4, 'Web Dev Guy', '12121@ait.nsw.edu.au', '$2y$10$HNo53O6dcjD/dTCodD8Y0ejEUJDwa0YGw/JRAN4ZHLExcluCTIfsK', NULL, '2026-03-24 01:58:01');
+(5, 'Web Dev Guy', '12121@ait.nsw.edu.au', '$2y$10$KKNgDU82ovWhkWliovqvwuKfr/aarVJHvoIcnVTYU67DIE8iviwsK', NULL, '2026-03-24 10:34:43');
 
 -- --------------------------------------------------------
 
@@ -257,6 +265,14 @@ CREATE TABLE IF NOT EXISTS `user_favorites` (
   PRIMARY KEY (`user_id`,`movie_id`),
   KEY `fk_uf_movie` (`movie_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_favorites`
+--
+
+INSERT INTO `user_favorites` (`user_id`, `movie_id`) VALUES
+(5, 19),
+(5, 27);
 
 --
 -- Constraints for dumped tables
