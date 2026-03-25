@@ -29,3 +29,28 @@ Web Dev Tech Stack
 - MySQL
 - Bootstrap for layout/styling plus pencil / stars / bin icons.
 - Xampp for database tables and for local database hosting / developing.
+- HTML
+- JavaScript
+
+Still to do / finish doing:
+
+1. Email validation – no email sending / verification yet.
+2. Global search bar.
+3. Automatic avg_rating updates – avg_rating has been created but not recalculated on review changes yet.
+4. Display average rating & review count on movie.php – not yet.
+5. Super Reviewer styling in reviews – badge and coloured/bold aliases inside review lists.
+6. Password change facility – no change‑password workflow.
+7. Privacy dashboard page which might end up getting nested in the help page.
+8. Extra sort/filter options:
+9. Lowest rated filter.
+10. Rating bands (1–5).
+11. Newest ratings (by review date).
+12. About / Help page.
+13. Genres link / genres page – currently handled by sidebar only.
+14. Make the site look like it does in our wireframes with the colours and everything.
+15. Fix the filters that aren't working properly.
+16. Fix the genres.
+17. Figure out the global search so that users can search by actor name.
+18. Show user “You have written X amount of reviews”.
+19. Show user their progress to becoming a Super Reviewer (e.g. 8/11).
+
