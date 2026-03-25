@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->execute();
 }
 
-// Redirects back
+// Redirects the user back
 header("Location: my_account.php");
 exit;
 ?>

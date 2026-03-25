@@ -9,7 +9,7 @@ if (!isset($_SESSION["user_id"])) {
 
 $user_id = $_SESSION["user_id"];
 
-// Delete user
+// Deletes user
 $stmt = $conn->prepare("DELETE FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();

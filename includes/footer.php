@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Movie page: new-review widget (id="star-rating")
+  // Movie page - new-review widget (id="star-rating")
   (function () {
     const container = document.getElementById('star-rating');
     const input     = document.getElementById('rating-value');
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })();
 
-  // Movie page: edit-review widget (id="edit-star-rating")
+  // Movie page - edit-review widget (id="edit-star-rating")
   (function () {
     const container = document.getElementById('edit-star-rating');
     const input     = document.getElementById('edit-rating-value');
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })();
 
-  // My account page: many edit widgets, ids like "star-rating-<id>"
+  // My account page - many edit widgets, ids like "star-rating-<id>"
   (function () {
     const containers = document.querySelectorAll('[id^="star-rating-"]');
     containers.forEach(container => {

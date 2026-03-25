@@ -22,7 +22,7 @@ $movieQuery->bind_param("i", $movieId);
 $movieQuery->execute();
 $movieResult = $movieQuery->get_result();
 
-if ($movieResult->num_rows !== 1) {
+if ($movieResult->num_rows == 0) {
     echo "Movie not found.";
     include("includes/footer.php");
     exit;
@@ -31,7 +31,7 @@ if ($movieResult->num_rows !== 1) {
 $movie = $movieResult->fetch_assoc();
 $movieQuery->close();
 
-// --- Handles 'POST' actions: favourites + reviews ---
+// Handles 'POST' actions: favourites and reviews
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 'FAVOURITES': do not require a rating or a comment, just requires login
@@ -143,12 +143,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $createReviewStmt->close();
     }
 
-    // Avoids resubmit on refresh
+    // Avoids resubmitting on refresh
     header("Location: movie.php?id=" . $movieId);
     exit;
 }
 
-// --- Fetches reviews for this movie ---
+// Fetches reviews for this movie
 $userReview       = null;
 $otherReviews     = [];
 $loggedInUserId   = isset($_SESSION["user_id"]) ? (int)$_SESSION["user_id"] : null;
@@ -179,7 +179,7 @@ while ($reviewRow = $movieReviewsResult->fetch_assoc()) {
 }
 $movieReviewsStmt->close();
 
-// --- Checks if this movie is in the logged-in user's favourites ---
+// Checks if this movie is in the logged-in user's favourites
 $isFavorite = false;
 if ($loggedInUserId) {
     $favouriteCheckStmt = $conn->prepare("
@@ -278,7 +278,7 @@ if ($loggedInUserId) {
         </form>
 
       <?php else: ?>
-        <!-- If user already has a review: show it plus edit/delete controls -->
+        <!-- If user already has a review - show it plus edit/delete controls -->
 
         <div class="card mb-4" id="my-review-card">
           <div class="card-body">
@@ -303,14 +303,14 @@ if ($loggedInUserId) {
               </div>
 
               <div>
-                <!-- Edit button (pencil) -->
+                <!-- Edit button (pencil icon) -->
                 <button type="button"
                         class="btn btn-sm btn-outline-secondary"
                         id="edit-my-review-btn">
                   <i class="bi bi-pencil"></i>
                 </button>
 
-                <!-- Delete form (trash) -->
+                <!-- Delete form (trash icon) -->
                 <form method="POST" class="d-inline"
                       onsubmit="return confirm('Delete your review?');">
                   <input type="hidden" name="review_id"

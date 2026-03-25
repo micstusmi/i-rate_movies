@@ -12,10 +12,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $review_id = (int)$_POST["review_id"];
     $rating = (int)$_POST["rating"];
     $comment = $_POST["comment"];
-    $user_id = (int)$_SESSION["user_id"];
+    $user_id = (int) $_SESSION["user_id"];
 
     $stmt = $conn->prepare("
-        UPDATE reviews 
+        UPDATES reviews 
         SET rating = ?, comment = ? 
         WHERE review_id = ? AND user_id = ?
     ");
@@ -23,6 +23,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->execute();
 }
 
-// Redirects user back to account page
+// Redirects the user back to the account page
 header("Location: ../my_account.php");
 exit;

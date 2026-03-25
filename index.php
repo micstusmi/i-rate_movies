@@ -2,7 +2,7 @@
 include(__DIR__ . "/includes/db.php");
 include(__DIR__ . "/includes/header.php");
 
-// Reads filter / sorts values from query string
+// Reads the filter / sorts the values from the query string
 
 $selectedGenre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $selectedYear  = isset($_GET['year'])  ? $_GET['year']  : 'all';
@@ -180,7 +180,7 @@ $moviesResult = $moviesStmt->get_result();
     <!-- Movies grid -->
     <div class="col-md-9">
         <div class="row">
-            <?php if ($moviesResult->num_rows === 0): ?>
+            <?php if (!$moviesResult->num_rows): ?>
                 <div class="col-12">
                     <p>No movies found for the selected filters.</p>
                 </div>

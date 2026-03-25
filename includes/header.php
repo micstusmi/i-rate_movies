@@ -33,7 +33,7 @@ if (isset($_SESSION["user_id"])) {
     <!-- Brand -->
     <a class="navbar-brand" href="index.php">i-rate Movies</a>
 
-    <!-- Right-side navigation -->
+    <!-- Right-hand side navigation -->
     <div class="d-flex align-items-center">
 
       <?php if (isset($_SESSION["user_id"])): ?>
@@ -50,7 +50,7 @@ if (isset($_SESSION["user_id"])) {
           </li>
         </ul>
 
-        <!-- Greeting + badge -->
+        <!-- Greeting and badge -->
         <span class="text-white me-3">
           Hello,
           <a href="my_account.php" class="text-white text-decoration-underline">
@@ -66,7 +66,7 @@ if (isset($_SESSION["user_id"])) {
 
       <?php else: ?>
 
-        <!-- When not logged in: Home + Login/Register -->
+        <!-- When not logged in: Home, plus Login/Register Buttons -->
         <ul class="navbar-nav flex-row me-3">
           <li class="nav-item me-3">
             <a class="nav-link text-white p-0" href="index.php">Home</a>

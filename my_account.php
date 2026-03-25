@@ -15,7 +15,7 @@ $userId = (int)$_SESSION["user_id"];
 $activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'reviews';
 
 
-// Get user's info
+// Gets user's info
 
 $userQuery = $conn->prepare("
     SELECT alias, email, created_at
@@ -27,7 +27,7 @@ $userQuery->execute();
 $userResult = $userQuery->get_result();
 $userQuery->close();
 
-if ($userResult->num_rows !== 1) {
+if ($userResult->num_rows == 0) {
     echo "User not found.";
     include("includes/footer.php");
     exit;
@@ -36,7 +36,7 @@ if ($userResult->num_rows !== 1) {
 $userData = $userResult->fetch_assoc();
 
 
-// Get user's reviews
+// Gets user's reviews
 
 $reviewsQuery = "
     SELECT
@@ -59,7 +59,7 @@ $userReviewsResult = $reviewsStmt->get_result();
 $reviewsStmt->close();
 
 
-// Get user's favourites
+// Gets user's favourites
 
 $favouritesQuery = "
     SELECT
