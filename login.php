@@ -6,7 +6,7 @@ include(__DIR__ . "/includes/header.php");
 $message = "";
 
 // Password throttle (if too many failed attempts).
-$MAX_ATTEMPTS   = 10;   // No. of failed logins before locking the user out
+$MAX_ATTEMPTS   = 5;   // No. of failed logins before locking the user out
 $WINDOW_SECONDS = 600; // 10 minutes locked out before resetting the time window
 
 // In‑session throttle (per browser)
