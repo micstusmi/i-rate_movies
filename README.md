@@ -53,4 +53,6 @@ Still to do / finish doing:
 17. Figure out the global search so that users can search by actor name.
 18. Show user “You have written X amount of reviews”.
 19. Show user their progress to becoming a Super Reviewer (e.g. 8/11).
+20. Make it so that the user can either login via their email address or their alias.
+21. Prepare the presentation for the class.
 
