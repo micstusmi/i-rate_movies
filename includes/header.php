@@ -71,6 +71,9 @@ if (isset($_SESSION["user_id"])) {
           <li class="nav-item me-3">
             <a class="nav-link text-white p-0" href="index.php">Home</a>
           </li>
+          <li class="nav-item me-3">
+            <a class="nav-link text-white p-0" href="about.php">About</a>
+          </li>
         </ul>
 
         <a href="login.php" class="btn btn-success btn-sm me-2">Login</a>
