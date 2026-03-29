@@ -5,30 +5,63 @@ include(__DIR__ . "/includes/header.php");
 
 $message = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST["email"];
-    $password = $_POST["password"];
+// Password throttle (if too many failed attempts).
+$MAX_ATTEMPTS   = 5;   // No. of failed logins before locking the user out
+$WINDOW_SECONDS = 600; // 10 minutes locked out before resetting the time window
 
-    $stmt = $conn->prepare("SELECT user_id, password, alias FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+// In‑session throttle (per browser)
+if (!isset($_SESSION['login_attempts'])) {
+    $_SESSION['login_attempts'] = [];
+}
 
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
+// Cleans up the old attempts
+$_SESSION['login_attempts'] = array_filter(
+    $_SESSION['login_attempts'],
+    function ($t) use ($WINDOW_SECONDS) {
+        return $t > time() - $WINDOW_SECONDS;
+    }
+);
 
-        if (password_verify($password, $user["password"])) {
-            // Stores session
-            $_SESSION["user_id"] = $user["user_id"];
-            $_SESSION["alias"] = $user["alias"];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email    = $_POST["email"] ?? "";
+    $password = $_POST["password"] ?? "";
 
-            header("Location: index.php");
-            exit;
-        } else {
-            $message = "Incorrect password.";
-        }
+    // if they already failed too many times in the last 10 minutes
+    if (count($_SESSION['login_attempts']) >= $MAX_ATTEMPTS) {
+        $message = "Too many failed login attempts. Please wait 10 minutes before trying again.";
     } else {
-        $message = "User not found.";
+        $stmt = $conn->prepare("SELECT user_id, password, alias FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        // Error message
+        $errorText = "Invalid email or password.";
+
+        if ($result->num_rows === 1) {
+            $user = $result->fetch_assoc();
+
+            if (password_verify($password, $user["password"])) {
+                // Reset attempts on success
+                $_SESSION['login_attempts'] = [];
+
+                $_SESSION["user_id"] = $user["user_id"];
+                $_SESSION["alias"]   = $user["alias"];
+
+                header("Location: index.php");
+                exit;
+            } else {
+                // Wrong password
+                $_SESSION['login_attempts'][] = time();
+                $message = $errorText;
+            }
+        } else {
+            // Email not found, but responds in the same way
+            $_SESSION['login_attempts'][] = time();
+            $message = $errorText;
+        }
+
+        $stmt->close();
     }
 }
 ?>
@@ -49,6 +82,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <button type="submit" class="btn btn-success">Login</button>
 </form>
 
-<p class="mt-3 text-danger"><?php echo $message; ?></p>
+<p class="mt-3 text-danger"><?php echo htmlspecialchars($message); ?></p>
 
 <?php include("includes/footer.php"); ?>

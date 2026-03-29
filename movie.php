@@ -172,9 +172,9 @@ $movieReviewsResult = $movieReviewsStmt->get_result();
 
 while ($reviewRow = $movieReviewsResult->fetch_assoc()) {
     if ($loggedInUserId && $reviewRow['user_id'] == $loggedInUserId) {
-        $userReview = $reviewRow;          // current user's review
+        $userReview = $reviewRow;          // current user's review at the top
     } else {
-        $otherReviews[] = $reviewRow;      // everyone else's reviews
+        $otherReviews[] = $reviewRow;      // everyone else's reviews below
     }
 }
 $movieReviewsStmt->close();
@@ -278,7 +278,7 @@ if ($loggedInUserId) {
         </form>
 
       <?php else: ?>
-        <!-- If user already has a review - show it plus edit/delete controls -->
+        <!-- If user already has a review - show the review plus the edit/delete controls -->
 
         <div class="card mb-4" id="my-review-card">
           <div class="card-body">
