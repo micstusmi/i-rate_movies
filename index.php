@@ -188,6 +188,7 @@ $moviesResult = $moviesStmt->get_result();
                 <?php while ($movie = $moviesResult->fetch_assoc()): ?>
                     <div class="col-md-4 mb-4">
                         <div class="card shadow p-3 h-100">
+                            <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="stretched-link"></a>
                             <img src="<?php echo htmlspecialchars($movie['image_url']); ?>"
                                  class="card-img-top"
                                  alt="Movie Image">
