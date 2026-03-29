@@ -55,3 +55,5 @@ Still to do / finish doing:
 19. Show user their progress to becoming a Super Reviewer (e.g. 8/11).
 20. Prepare the presentation for the class.
 
+Trello :
+https://trello.com/invite/b/69b75009c187e6b32845351d/ATTI03d99de0f7e8b3aa66221a5d8d8e1b48AF620EAC/i-rate-movie
