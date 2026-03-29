@@ -6,11 +6,11 @@ include(__DIR__ . "/includes/header.php");
 
 <div class="container mt-5">
     <h2 class="mb-4">About Us</h2>
-    <p>I-rate Movies is a movie review website that allows users to rate and review movies. 
-        Every movie has the facility to be able to be reviewed from 1-5 stars and add an additional comment if they choose to.
-        The user should be able to edit and delete their reviews either from the movie page or from their account page.
-        On the movie detail page the reviewer should be able to see their own review at the top and a list of everyone else's reviews below that in descending chronological order.
-        After a user has made 11+ reviews then that user will get a super-reviewer badge.</p>
+    <p>I-rate Movies is a movie review website that allows users to browse movies and find information relating to their movie/s of interest and if they want, they can rate / review a movie/s.</p> 
+        <p>Every movie has the facility to be able to be reviewed from 1-5 stars and add an additional comment if the user chooses to, provided that they are logged in.</p>
+        <p>The user is able to edit and delete their reviews, either from the movie page, or, from their account page.</p>
+        <p>On the movie detail page the reviewer is able to see their own review at the top of the reviews list, plus, see a list of everyone else's reviews in descending chronological order.</p>
+        <p>After a user has made 11+ reviews then they will be awarded with a super-reviewer status / badge.</p>
     </br>
     <hr>
     </br>
