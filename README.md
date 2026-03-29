@@ -1,6 +1,6 @@
 i-rate movies setup info:
 
-Setup (For Wendy / Vivian)
+Setup (For Vivian)
 
 1. Download the repository from GitHub.
 2. Save everything in C:\xampp\htdocs\i-rate_movies\
