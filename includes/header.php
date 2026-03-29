@@ -73,7 +73,7 @@ if (isset($_SESSION["user_id"])) {
             <a class="nav-link text-dark p-0" href="index.php">Home</a>
           </li>
           <li class="nav-item me-3">
-            <a class="nav-link text-dark p-0" href="about.php">About</a>
+            <a class="nav-link text-dark p-0" href="about_us.php">About</a>
           </li>
         </ul>
 
