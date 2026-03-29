@@ -1,0 +1,23 @@
+body {
+    background-color: #e3dcdc;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.site-header {
+    background-color: #fffdfd;
+    padding: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(109, 106, 106, 0.542);
+}
+
+.context-box {
+    background-color: #d2cfcf;
+    border-radius: 5px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(118, 117, 117, 0.542);
+}
+
+.context-box p {
+    color: #565555;
+    line-height: 1.6;
+}
