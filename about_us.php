@@ -15,7 +15,7 @@ include(__DIR__ . "/includes/header.php");
     <hr>
     </br>
 
-    <h3 class="mt-5 mb-3">Frequently Asked Questions</h3>
+    <h3 class="mt-5 mb-3"><u>Frequently Asked Questions</u></h3>
     <div class="accordion" id="faqAccordion">
         <div class="accordion-item">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
