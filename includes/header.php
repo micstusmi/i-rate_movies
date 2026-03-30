@@ -35,52 +35,7 @@ if (isset($_SESSION["user_id"])) {
     <a class="navbar-brand" href="index.php">i-rate Movies</a>
 
     <!-- Right-hand side navigation -->
-    <div class="d-flex align-items-center">
-
-      <!-- Shared links: always visible -->
-      <ul class="navbar-nav flex-row me-3">
-        <li class="nav-item me-3">
-          <a class="nav-link text-dark p-0" href="index.php">Home</a>
-        </li>
-        <li class="nav-item me-3">
-          <a class="nav-link text-dark p-0" href="about_us.php">About</a>
-        </li>
-
-        <?php if (isset($_SESSION["user_id"])): ?>
-          <li class="nav-item me-3">
-            <a class="nav-link text-dark p-0" href="my_account.php?tab=favourites">Favourites</a>
-          </li>
-          <li class="nav-item me-3">
-            <a class="nav-link text-dark p-0" href="my_account.php?tab=reviews">Account</a>
-          </li>
-        <?php endif; ?>
-      </ul>
-
-      <?php if (isset($_SESSION["user_id"])): ?>
-
-        <!-- Greeting and badge -->
-        <span class="text-dark me-3">
-          Hello,
-          <a href="my_account.php" class="text-dark text-decoration-underline">
-            <?php echo htmlspecialchars($_SESSION["alias"]); ?>
-          </a>
-          <?php if ($reviewCount >= 11): ?>
-            <span class="badge bg-warning text-dark ms-2">⭐ Super Reviewer</span>
-          <?php endif; ?>
-        </span>
-
-        <!-- Logout button -->
-        <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
-
-      <?php else: ?>
-
-        <!-- Login / Register buttons when not logged in -->
-        <a href="login.php" class="btn btn-success btn-sm me-2">Login</a>
-        <a href="register.php" class="btn btn-primary btn-sm">Register</a>
-
-      <?php endif; ?>
-
-    </div>
+    <div class="d-flex align-items-center"><?php if (isset($_SESSION["user_id"])): ?><!-- Main links --><ul class="navbar-nav flex-row me-3"><li class="nav-item me-3"><a class="nav-link text-dark p-0" href="index.php">Home</a></li><li class="nav-item me-3"><a class="nav-link text-dark p-0" href="my_account.php?tab=favourites">Favourites</a></li><li class="nav-item me-3"><a class="nav-link text-dark p-0" href="my_account.php?tab=reviews">Account</a></li></ul><!-- Greeting and badge --><span class="text-dark me-3">Hello,<a href="my_account.php" class="text-dark text-decoration-underline"><?php echo htmlspecialchars($_SESSION["alias"]); ?></a><?php if ($reviewCount >= 11): ?><span class="badge bg-warning text-dark ms-2">⭐ Super Reviewer</span><?php endif; ?></span><!-- Logout button --><a href="logout.php" class="btn btn-danger btn-sm">Logout</a><?php else: ?><!-- When not logged in: Home, plus Login/Register Buttons --><ul class="navbar-nav flex-row me-3"><li class="nav-item me-3"><a class="nav-link text-dark p-0" href="index.php">Home</a></li><li class="nav-item me-3"><a class="nav-link text-dark p-0" href="about_us.php">About</a></li></ul><a href="login.php" class="btn btn-success btn-sm me-2">Login</a><a href="register.php" class="btn btn-primary btn-sm">Register</a><?php endif; ?></div>
   </div>
 </nav>
 
