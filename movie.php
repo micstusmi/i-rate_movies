@@ -13,7 +13,7 @@ if (!isset($_GET["id"])) {
 
 $movieId = (int)$_GET["id"];  // movie_id
 
-// Fetches movie data first
+// Fetch movie data first
 $movieQuery = $conn->prepare("SELECT * FROM movies WHERE movie_id = ?");
 if (!$movieQuery) {
     die("Prepare failed: " . $conn->error);
@@ -31,129 +31,12 @@ if ($movieResult->num_rows == 0) {
 $movie = $movieResult->fetch_assoc();
 $movieQuery->close();
 
-// Handles 'POST' actions: favourites and reviews
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // 'FAVOURITES': do not require a rating or a comment, just requires login
-    if (isset($_POST['add_favorite']) || isset($_POST['remove_favorite'])) {
-        if (!isset($_SESSION["user_id"])) {
-            echo "You must be logged in to perform this action.";
-            include("includes/footer.php");
-            exit;
-        }
-
-        $currentUserId = (int)$_SESSION["user_id"];
-
-        if (isset($_POST['add_favorite'])) {
-            // Insert, ignore duplicates
-            $addFavouriteStmt = $conn->prepare("
-                INSERT IGNORE INTO user_favorites (user_id, movie_id)
-                VALUES (?, ?)
-            ");
-            if (!$addFavouriteStmt) {
-                die("Prepare failed: " . $conn->error);
-            }
-            $addFavouriteStmt->bind_param("ii", $currentUserId, $movieId);
-            $addFavouriteStmt->execute();
-            $addFavouriteStmt->close();
-
-        } elseif (isset($_POST['remove_favorite'])) {
-            // Deletes favourite
-            $removeFavouriteStmt = $conn->prepare("
-                DELETE FROM user_favorites
-                WHERE user_id = ? AND movie_id = ?
-            ");
-            if (!$removeFavouriteStmt) {
-                die("Prepare failed: " . $conn->error);
-            }
-            $removeFavouriteStmt->bind_param("ii", $currentUserId, $movieId);
-            $removeFavouriteStmt->execute();
-            $removeFavouriteStmt->close();
-        }
-
-        // Redirects back to avoid form resubmission
-        header("Location: movie.php?id=" . $movieId);
-        exit;
-    }
-
-    // Review Actions (create / update / delete)
-    if (!isset($_SESSION["user_id"])) {
-        echo "You must be logged in to perform this action.";
-        include("includes/footer.php");
-        exit;
-    }
-
-    $currentUserId = (int)$_SESSION["user_id"];
-
-    // Deletes review
-    if (isset($_POST['delete_review'])) {
-        $reviewIdToDelete = (int)$_POST['review_id'];
-
-        $deleteReviewStmt = $conn->prepare("DELETE FROM reviews WHERE review_id = ? AND user_id = ?");
-        if (!$deleteReviewStmt) {
-            die("Prepare failed: " . $conn->error);
-        }
-        $deleteReviewStmt->bind_param("ii", $reviewIdToDelete, $currentUserId);
-        $deleteReviewStmt->execute();
-        $deleteReviewStmt->close();
-
-        header("Location: movie.php?id=" . $movieId);
-        exit;
-    }
-
-    // Creates or Updates user's review
-    $ratingValue   = (int)($_POST["rating"] ?? 0);
-    $reviewComment = $_POST["comment"] ?? '';
-
-    if ($ratingValue < 1 || $ratingValue > 5) {
-        echo "Invalid rating.";
-        include("includes/footer.php");
-        exit;
-    }
-
-    if (isset($_POST['update_review']) && isset($_POST['review_id'])) {
-        // Updates existing review
-        $reviewIdToUpdate = (int)$_POST['review_id'];
-
-        $updateReviewStmt = $conn->prepare("
-            UPDATE reviews
-            SET rating = ?, comment = ?
-            WHERE review_id = ? AND user_id = ?
-        ");
-        if (!$updateReviewStmt) {
-            die("Prepare failed: " . $conn->error);
-        }
-
-        $updateReviewStmt->bind_param("isii", $ratingValue, $reviewComment, $reviewIdToUpdate, $currentUserId);
-        $updateReviewStmt->execute();
-        $updateReviewStmt->close();
-
-    } elseif (isset($_POST['submit_review'])) {
-        // Creates a new review
-        $createReviewStmt = $conn->prepare("
-            INSERT INTO reviews (user_id, movie_id, rating, comment)
-            VALUES (?, ?, ?, ?)
-        ");
-        if (!$createReviewStmt) {
-            die("Prepare failed: " . $conn->error);
-        }
-
-        $createReviewStmt->bind_param("iiis", $currentUserId, $movieId, $ratingValue, $reviewComment);
-        $createReviewStmt->execute();
-        $createReviewStmt->close();
-    }
-
-    // Avoids resubmitting on refresh
-    header("Location: movie.php?id=" . $movieId);
-    exit;
-}
-
-// Fetches reviews for this movie
+// Fetch reviews for this movie
 $userReview       = null;
 $otherReviews     = [];
 $loggedInUserId   = isset($_SESSION["user_id"]) ? (int)$_SESSION["user_id"] : null;
 
-// Fetches all reviews with user's info
+// Fetch all reviews with user's info
 $movieReviewsStmt = $conn->prepare("
     SELECT r.review_id, r.user_id, r.rating, r.comment, r.created_at,
            u.alias
@@ -179,7 +62,7 @@ while ($reviewRow = $movieReviewsResult->fetch_assoc()) {
 }
 $movieReviewsStmt->close();
 
-// Checks if this movie is in the logged-in user's favourites
+// Check if this movie is in the logged-in user's favourites
 $isFavorite = false;
 if ($loggedInUserId) {
     $favouriteCheckStmt = $conn->prepare("
@@ -218,7 +101,7 @@ if ($loggedInUserId) {
       <!-- Favourite / Unfavourite button -->
       <div class="text-end">
         <?php if (isset($_SESSION["user_id"])): ?>
-          <form method="POST">
+          <form method="POST" action="movie_actions.php?id=<?php echo $movieId; ?>">
             <?php if ($isFavorite): ?>
               <button type="submit" name="remove_favorite" class="btn btn-outline-danger btn-sm">
                 <i class="bi bi-heart-fill"></i> Remove from favourites
@@ -248,7 +131,7 @@ if ($loggedInUserId) {
 
       <?php if (!$userReview): ?>
         <!-- No review yet: show create form -->
-        <form method="POST" id="new-review-form">
+        <form method="POST" action="movie_actions.php?id=<?php echo $movieId; ?>" id="new-review-form">
           <div class="mb-3">
             <label class="form-label d-block">Rating (1–5)</label>
 
@@ -311,7 +194,7 @@ if ($loggedInUserId) {
                 </button>
 
                 <!-- Delete form (trash icon) -->
-                <form method="POST" class="d-inline"
+                <form method="POST" action="movie_actions.php?id=<?php echo $movieId; ?>" class="d-inline"
                       onsubmit="return confirm('Delete your review?');">
                   <input type="hidden" name="review_id"
                          value="<?php echo (int)$userReview['review_id']; ?>">
@@ -332,7 +215,7 @@ if ($loggedInUserId) {
             </small>
 
             <!-- Hidden edit form (shown when clicking the pencil) -->
-            <form method="POST" id="edit-my-review-form" class="mt-3 d-none">
+            <form method="POST" action="movie_actions.php?id=<?php echo $movieId; ?>" id="edit-my-review-form" class="mt-3 d-none">
               <input type="hidden" name="review_id"
                      value="<?php echo (int)$userReview['review_id']; ?>">
 

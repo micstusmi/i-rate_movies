@@ -67,24 +67,24 @@ if ($sortOrder === 'promotions') {
 // 6. Sort order
 switch ($sortOrder) {
     case 'new':
-        $orderBySql = "ORDER BY created_at DESC, title ASC";
+        $orderBySql = "ORDER BY created_at DESC, m.title ASC";
         break;
 
     case 'promotions':
-        $orderBySql = "ORDER BY created_at DESC, title ASC";
+        $orderBySql = "ORDER BY created_at DESC, m.title ASC";
         break;
 
     case 'rating_desc':
         // adjust if you don't actually have avg_rating
-        $orderBySql = "ORDER BY avg_rating DESC, title ASC";
+        $orderBySql = "ORDER BY avg_rating DESC, m.title ASC";
         break;
 
     case 'year_asc':
-        $orderBySql = "ORDER BY `year` ASC, title ASC";
+        $orderBySql = "ORDER BY `year` ASC, m.title ASC";
         break;
 
     case 'year_desc':
-        $orderBySql = "ORDER BY `year` DESC, title ASC";
+        $orderBySql = "ORDER BY `year` DESC, m.title ASC";
         break;
 
     case 'random':
@@ -104,8 +104,15 @@ $newStripSql    = "SELECT * FROM movies ORDER BY created_at DESC LIMIT 10";
 $newStripResult = $conn->query($newStripSql);
 
 // 8. Final query for main grid
-$moviesQuerySql = "SELECT * FROM movies $whereSql $promoClause $orderBySql";
-$moviesStmt     = $conn->prepare($moviesQuerySql);
+$moviesQuerySql = "
+    SELECT m.*,
+           COALESCE(AVG(r.rating), 0) AS avg_rating
+    FROM movies m
+    LEFT JOIN reviews r ON m.movie_id = r.movie_id
+    $whereSql $promoClause
+    GROUP BY m.movie_id
+    $orderBySql
+";$moviesStmt     = $conn->prepare($moviesQuerySql);
 
 if (!empty($queryParams)) {
     $moviesStmt->bind_param($paramTypes, ...$queryParams);
