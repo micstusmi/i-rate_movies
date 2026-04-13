@@ -1,3 +1,59 @@
+<style>
+    /* NEW & PROMOTIONS STRIPS */
+    .horizontal-strip {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        gap: 0.4rem !important;
+        padding-bottom: 0.25rem !important;
+    }
+
+    .horizontal-strip::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .horizontal-strip::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 2px;
+    }
+
+    .strip-item-card {
+        flex: 0 0 auto !important;
+        width: 90px !important;
+    }
+
+    .strip-item-card img {
+        height: 120px !important;
+        object-fit: cover;
+    }
+
+    .strip-item-title {
+        font-size: 0.65rem !important;
+        margin: 0 !important;
+        line-height: 1.1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;      /* show max 2 lines */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+}
+
+    /* Tighten card body inside strips */
+    .horizontal-strip .strip-item-card .card-body {
+        padding: 0.15rem 0.25rem !important;
+    }
+
+    /* Remove default bottom spacing inside card body */
+    .horizontal-strip .strip-item-card .card-body > *:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .strip-heading {
+        font-size: 0.85rem !important;
+        margin-bottom: 0.3rem !important;
+    }
+</style>
+
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

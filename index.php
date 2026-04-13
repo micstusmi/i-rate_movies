@@ -3,13 +3,11 @@ include(__DIR__ . "/includes/db.php");
 include(__DIR__ . "/includes/header.php");
 
 // Reads the filter / sorts the values from the query string
-
 $selectedGenre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $selectedYear  = isset($_GET['year'])  ? $_GET['year']  : 'all';
 $sortOrder     = isset($_GET['sort'])  ? $_GET['sort']  : 'random';
 
 // Gets distinct genres from movies
-
 $genresResult = $conn->query("
     SELECT DISTINCT genre
     FROM movies
@@ -22,7 +20,6 @@ while ($genreRow = $genresResult->fetch_assoc()) {
 }
 
 // Defines year ranges
-
 $yearRanges = [
     '1941-1950' => [1941, 1950],
     '1951-1960' => [1951, 1960],
@@ -36,7 +33,6 @@ $yearRanges = [
 ];
 
 // Builds 'WHERE' conditions
-
 $whereClauses = [];
 $queryParams  = [];
 $paramTypes   = "";
@@ -62,25 +58,52 @@ if (!empty($whereClauses)) {
     $whereSql = "WHERE " . implode(" AND ", $whereClauses);
 }
 
+// Promotions filter (only when sort == promotions)
+$promoClause = "";
+if ($sortOrder === 'promotions') {
+    $promoClause = empty($whereClauses) ? "WHERE is_promo = 1" : " AND is_promo = 1";
+}
+
 // Sort order
 switch ($sortOrder) {
+    case 'new':
+        $orderBySql = "ORDER BY created_at DESC, title ASC";
+        break;
+
+    case 'promotions':
+        $orderBySql = "ORDER BY created_at DESC, title ASC";
+        break;
+
     case 'rating_desc':
         $orderBySql = "ORDER BY avg_rating DESC, title ASC";
         break;
+
     case 'year_asc':
         $orderBySql = "ORDER BY `year` ASC, title ASC";
         break;
+
     case 'year_desc':
         $orderBySql = "ORDER BY `year` DESC, title ASC";
         break;
+
     case 'random':
     default:
         $orderBySql = "ORDER BY RAND()";
         break;
 }
 
-// Final query
-$moviesQuerySql = "SELECT * FROM movies $whereSql $orderBySql";
+// --- Data for horizontal strips (independent of sidebar filters) ---
+
+// Promotions strip (top left)
+$promoStripSql = "SELECT * FROM movies WHERE is_promo = 1 ORDER BY created_at DESC LIMIT 10";
+$promoStripResult = $conn->query($promoStripSql);
+
+// New arrivals strip (top right)
+$newStripSql = "SELECT * FROM movies ORDER BY created_at DESC LIMIT 10";
+$newStripResult = $conn->query($newStripSql);
+
+// Final query for main grid
+$moviesQuerySql = "SELECT * FROM movies $whereSql $promoClause $orderBySql";
 $moviesStmt = $conn->prepare($moviesQuerySql);
 
 if (!empty($queryParams)) {
@@ -90,6 +113,57 @@ if (!empty($queryParams)) {
 $moviesStmt->execute();
 $moviesResult = $moviesStmt->get_result();
 ?>
+
+<!-- Top row with two horizontal strips -->
+<div class="row mb-3">
+    <!-- Promotions strip (top left) -->
+    <div class="col-md-6 mb-3">
+        <h5 class="strip-heading">Promotions</h5>
+        <?php if ($promoStripResult && $promoStripResult->num_rows): ?>
+            <div class="horizontal-strip">
+                <?php while ($movie = $promoStripResult->fetch_assoc()): ?>
+                    <div class="strip-item-card card shadow-sm">
+                        <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="stretched-link"></a>
+                        <img src="<?php echo htmlspecialchars($movie['image_url']); ?>"
+                             class="card-img-top"
+                             alt="Movie Poster">
+                        <div class="card-body">
+                            <p class="strip-item-title">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </p>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-muted mb-0">No promotions currently.</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- New Arrivals strip (top right) -->
+    <div class="col-md-6 mb-3">
+        <h5 class="strip-heading">New Arrivals</h5>
+        <?php if ($newStripResult && $newStripResult->num_rows): ?>
+            <div class="horizontal-strip">
+                <?php while ($movie = $newStripResult->fetch_assoc()): ?>
+                    <div class="strip-item-card card shadow-sm">
+                        <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="stretched-link"></a>
+                        <img src="<?php echo htmlspecialchars($movie['image_url']); ?>"
+                             class="card-img-top"
+                             alt="Movie Poster">
+                        <div class="card-body">
+                            <p class="strip-item-title">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </p>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-muted mb-0">No new movies yet.</p>
+        <?php endif; ?>
+    </div>
+</div>
 
 <h2 class="mb-4">Movies</h2>
 
@@ -158,18 +232,12 @@ $moviesResult = $moviesStmt->get_result();
                         <input type="hidden" name="year"  value="<?php echo htmlspecialchars($selectedYear); ?>">
 
                         <select name="sort" class="form-select" onchange="this.form.submit()">
-                            <option value="random" <?php echo ($sortOrder === 'random') ? 'selected' : ''; ?>>
-                                Random
-                            </option>
-                            <option value="rating_desc" <?php echo ($sortOrder === 'rating_desc') ? 'selected' : ''; ?>>
-                                Highest Rated
-                            </option>
-                            <option value="year_asc" <?php echo ($sortOrder === 'year_asc') ? 'selected' : ''; ?>>
-                                Year Made (Oldest First)
-                            </option>
-                            <option value="year_desc" <?php echo ($sortOrder === 'year_desc') ? 'selected' : ''; ?>>
-                                Year Made (Newest First)
-                            </option>
+                            <option value="random"     <?php echo ($sortOrder === 'random') ? 'selected' : ''; ?>>Random</option>
+                            <option value="new"        <?php echo ($sortOrder === 'new') ? 'selected' : ''; ?>>New Movies</option>
+                            <option value="promotions" <?php echo ($sortOrder === 'promotions') ? 'selected' : ''; ?>>Promotions</option>
+                            <option value="rating_desc" <?php echo ($sortOrder === 'rating_desc') ? 'selected' : ''; ?>>Highest Rated</option>
+                            <option value="year_asc"    <?php echo ($sortOrder === 'year_asc') ? 'selected' : ''; ?>>Year Made (Oldest First)</option>
+                            <option value="year_desc"   <?php echo ($sortOrder === 'year_desc') ? 'selected' : ''; ?>>Year Made (Newest First)</option>
                         </select>
                     </div>
                 </form>
