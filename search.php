@@ -1,7 +1,7 @@
 <?php
 // search.php - full search results page
 
-// DB and header (note: db is inside includes, header already starts HTML)
+// DB and header
 include __DIR__ . '/includes/db.php';
 include __DIR__ . '/includes/header.php';
 
@@ -9,31 +9,52 @@ $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 
 $movies = [];
 if ($q !== '') {
-    $isYear = preg_match('/^\d{4}$/', $q);
 
-    $sql = "
-        SELECT movie_id, title, year, actors, image_url, description
-        FROM movies
-        WHERE
-            title LIKE ?
-            OR actors LIKE ?
-            " . ($isYear ? " OR year = ? " : "") . "
-        ORDER BY title
-    ";
+    // Split the query into separate words/tokens
+    $tokens = preg_split('/\s+/', $q);
+    $conditions = [];
+    $params     = [];
+    $types      = '';
 
-    $stmt = $conn->prepare($sql);
-    $like = '%' . $q . '%';
+    foreach ($tokens as $token) {
+        $token = trim($token);
+        if ($token === '') {
+            continue;
+        }
 
-    if ($isYear) {
-        $stmt->bind_param('ssi', $like, $like, $q);
-    } else {
-        $stmt->bind_param('ss', $like, $like);
+        // If this token is a 4‑digit number, treat it as a year filter
+        if (preg_match('/^\d{4}$/', $token)) {
+            $conditions[] = '(year = ?)';
+            $types       .= 'i';
+            $params[]     = (int)$token;
+        } else {
+            // Otherwise, token must appear in title OR actors
+            $conditions[] = '(title LIKE ? OR actors LIKE ?)';
+            $types       .= 'ss';
+            $like         = '%' . $token . '%';
+            $params[]     = $like; // for title
+            $params[]     = $like; // for actors
+        }
     }
 
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $movies = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+    if (!empty($conditions)) {
+        // All tokens must match somewhere (AND between each token’s condition)
+        $whereSql = 'WHERE ' . implode(' AND ', $conditions);
+
+        $sql = "
+            SELECT movie_id, title, year, actors, image_url, description
+            FROM movies
+            $whereSql
+            ORDER BY title
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $movies = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+    }
 }
 ?>
 
