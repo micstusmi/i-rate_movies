@@ -1,295 +1,345 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// index.php
+
+require_once(__DIR__ . "/includes/db.php");
+require_once(__DIR__ . "/includes/header.php");
+
+// 1. Read filters / sort from query string
+$selectedGenre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
+$selectedYear  = isset($_GET['year'])  ? $_GET['year']  : 'all';
+$sortOrder     = isset($_GET['sort'])  ? $_GET['sort']  : 'random';
+
+// 2. Get distinct genres from movies
+$genresResult = $conn->query("
+    SELECT DISTINCT genre
+    FROM movies
+    WHERE genre IS NOT NULL AND genre <> ''
+    ORDER BY genre
+");
+$genres = [];
+while ($genreRow = $genresResult->fetch_assoc()) {
+    $genres[] = $genreRow['genre'];
 }
 
-$reviewCount = 0;
+// 3. Define year ranges
+$yearRanges = [
+    '1941-1950' => [1941, 1950],
+    '1951-1960' => [1951, 1960],
+    '1961-1970' => [1961, 1970],
+    '1971-1980' => [1971, 1980],
+    '1981-1990' => [1981, 1990],
+    '1991-2000' => [1991, 2000],
+    '2001-2010' => [2001, 2010],
+    '2011-2020' => [2011, 2020],
+    '2021-2030' => [2021, 2030],
+];
 
-// db.php is in the same includes folder as this file
-if (isset($_SESSION["user_id"])) {
-    include __DIR__ . "/db.php";
+// 4. Build WHERE conditions
+$whereClauses = [];
+$queryParams  = [];
+$paramTypes   = "";
 
-    $reviewCountStmt = $conn->prepare("SELECT COUNT(*) as total FROM reviews WHERE user_id = ?");
-    $reviewCountStmt->bind_param("i", $_SESSION["user_id"]);
-    $reviewCountStmt->execute();
-    $reviewCountResult = $reviewCountStmt->get_result();
-    $reviewCountRow = $reviewCountResult->fetch_assoc();
-    $reviewCountStmt->close();
+// Genre filter
+if ($selectedGenre !== 'all' && $selectedGenre !== '') {
+    $whereClauses[] = "genre = ?";
+    $paramTypes    .= "s";
+    $queryParams[]  = $selectedGenre;
+}
 
-    $reviewCount = (int)$reviewCountRow["total"];
+// Year range filter
+if ($selectedYear !== 'all' && isset($yearRanges[$selectedYear])) {
+    [$startYear, $endYear] = $yearRanges[$selectedYear];
+    $whereClauses[] = "`year` BETWEEN ? AND ?";
+    $paramTypes    .= "ii";
+    $queryParams[]  = $startYear;
+    $queryParams[]  = $endYear;
+}
+
+$whereSql = "";
+if (!empty($whereClauses)) {
+    $whereSql = "WHERE " . implode(" AND ", $whereClauses);
+}
+
+// 5. Promotions extra filter when sort == promotions
+$promoClause = "";
+if ($sortOrder === 'promotions') {
+    $promoClause = empty($whereClauses) ? "WHERE is_promo = 1" : " AND is_promo = 1";
+}
+
+// 6. Sort order
+switch ($sortOrder) {
+    case 'new':
+        $orderBySql = "ORDER BY created_at DESC, m.title ASC";
+        break;
+
+    case 'promotions':
+        $orderBySql = "ORDER BY created_at DESC, m.title ASC";
+        break;
+
+    case 'rating_desc':
+        $orderBySql = "ORDER BY avg_rating DESC, m.title ASC";
+        break;
+
+    case 'year_asc':
+        $orderBySql = "ORDER BY `year` ASC, m.title ASC";
+        break;
+
+    case 'year_desc':
+        $orderBySql = "ORDER BY `year` DESC, m.title ASC";
+        break;
+
+    case 'random':
+    default:
+        $orderBySql = "ORDER BY RAND()";
+        break;
+}
+
+// 7. Data for horizontal strips (independent of sidebar filters)
+
+// Promotions strip (top left)
+$promoStripSql    = "SELECT * FROM movies WHERE is_promo = 1 ORDER BY created_at DESC LIMIT 10";
+$promoStripResult = $conn->query($promoStripSql);
+
+// New arrivals strip (top right)
+$newStripSql    = "SELECT * FROM movies ORDER BY created_at DESC LIMIT 10";
+$newStripResult = $conn->query($newStripSql);
+
+// 8. Final query for main grid
+$moviesQuerySql = "
+    SELECT m.*,
+           COALESCE(AVG(r.rating), 0) AS avg_rating
+    FROM movies m
+    LEFT JOIN reviews r ON m.movie_id = r.movie_id
+    $whereSql $promoClause
+    GROUP BY m.movie_id
+    $orderBySql
+";
+$moviesStmt     = $conn->prepare($moviesQuerySql);
+
+if (!empty($queryParams)) {
+    $moviesStmt->bind_param($paramTypes, ...$queryParams);
+}
+
+$moviesStmt->execute();
+$moviesResult = $moviesStmt->get_result();
+?>
+
+<!-- Top row with two horizontal strips -->
+<div class="row mb-3">
+    <!-- Promotions strip (top left) -->
+    <div class="col-md-6 mb-3">
+        <h5 class="strip-heading">Promotions</h5>
+        <?php if ($promoStripResult && $promoStripResult->num_rows): ?>
+            <div class="horizontal-strip">
+                <?php while ($movie = $promoStripResult->fetch_assoc()): ?>
+                    <div class="strip-item-card card shadow-sm">
+                        <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="stretched-link"></a>
+                        <img src="<?php echo htmlspecialchars($movie['image_url']); ?>"
+                             class="card-img-top"
+                             alt="Movie Poster">
+                        <div class="card-body">
+                            <p class="strip-item-title"
+                               title="<?php echo htmlspecialchars($movie['title']); ?>">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </p>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-muted mb-0">No promotions currently.</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- New Arrivals strip (top right) -->
+    <div class="col-md-6 mb-3">
+        <h5 class="strip-heading">New Arrivals</h5>
+        <?php if ($newStripResult && $newStripResult->num_rows): ?>
+            <div class="horizontal-strip">
+                <?php while ($movie = $newStripResult->fetch_assoc()): ?>
+                    <div class="strip-item-card card shadow-sm">
+                        <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="stretched-link"></a>
+                        <img src="<?php echo htmlspecialchars($movie['image_url']); ?>"
+                             class="card-img-top"
+                             alt="Movie Poster">
+                        <div class="card-body">
+                            <p class="strip-item-title"
+                               title="<?php echo htmlspecialchars($movie['title']); ?>">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </p>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-muted mb-0">No new movies yet.</p>
+        <?php endif; ?>
+    </div>
+</div>
+
+<h2 class="mb-2">Movies</h2>
+
+<?php
+// Nice, human-readable "currently viewing" text
+$genreLabel = ($selectedGenre === 'all') ? 'All genres' : $selectedGenre;
+$yearLabel  = ($selectedYear === 'all')  ? 'All years'  : $selectedYear;
+
+switch ($sortOrder) {
+    case 'new':
+        $sortLabel = 'sorted by New Movies';
+        break;
+    case 'promotions':
+        $sortLabel = 'showing Promotions';
+        break;
+    case 'rating_desc':
+        $sortLabel = 'sorted by Highest Rated';
+        break;
+    case 'year_asc':
+        $sortLabel = 'sorted by Year (Oldest First)';
+        break;
+    case 'year_desc':
+        $sortLabel = 'sorted by Year (Newest First)';
+        break;
+    case 'random':
+    default:
+        $sortLabel = 'in Random order';
+        break;
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>i-rate Movies</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="includes/style.css" rel="stylesheet">
 
-    <style>
-        /* NEW & PROMOTIONS STRIPS */
-        .horizontal-strip {
-            display: flex !important;
-            flex-wrap: nowrap !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            gap: 0.4rem !important;
-            padding-bottom: 0.25rem !important;
-        }
+<p class="text-muted mb-3">
+    Currently viewing:
+    <strong><?php echo htmlspecialchars($genreLabel); ?></strong>,
+    <strong><?php echo htmlspecialchars($yearLabel); ?></strong>
+    <span>(<?php echo $sortLabel; ?>)</span>
+</p>
 
-        .horizontal-strip::-webkit-scrollbar {
-            height: 4px;
-        }
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <strong>Filter</strong>
+            </div>
+            <div class="card-body">
+                <!-- One form to control genre, year, sort together -->
+                <form method="get" id="filterForm">
+                    <!-- Single source of truth for current filters -->
+                    <input type="hidden" name="genre" id="filterGenre" value="<?php echo htmlspecialchars($selectedGenre); ?>">
+                    <input type="hidden" name="year"  id="filterYear"  value="<?php echo htmlspecialchars($selectedYear); ?>">
+                    <input type="hidden" name="sort"  id="filterSort"  value="<?php echo htmlspecialchars($sortOrder); ?>">
 
-        .horizontal-strip::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 2px;
-        }
+                    <!-- Genre filter -->
+                    <div class="mb-3">
+                        <h6 class="mb-2">Genre</h6>
+                        <div class="list-group">
+                            <button
+                                type="button"
+                                class="list-group-item list-group-item-action genre-btn <?php echo ($selectedGenre === 'all') ? 'active' : ''; ?>"
+                                data-genre="all">
+                                All
+                            </button>
+                            <?php foreach ($genres as $genre): ?>
+                                <button
+                                    type="button"
+                                    class="list-group-item list-group-item-action genre-btn <?php echo ($selectedGenre === $genre) ? 'active' : ''; ?>"
+                                    data-genre="<?php echo htmlspecialchars($genre); ?>">
+                                    <?php echo htmlspecialchars($genre); ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
 
-        .strip-item-card {
-            flex: 0 0 auto !important;
-            width: 90px !important;
-        }
+                    <!-- Year range filter -->
+                    <div class="mb-3">
+                        <h6 class="mb-2">Year Made</h6>
+                        <div class="list-group">
+                            <button
+                                type="button"
+                                class="list-group-item list-group-item-action year-btn <?php echo ($selectedYear === 'all') ? 'active' : ''; ?>"
+                                data-year="all">
+                                All Years
+                            </button>
+                            <?php foreach ($yearRanges as $label => $range): ?>
+                                <button
+                                    type="button"
+                                    class="list-group-item list-group-item-action year-btn <?php echo ($selectedYear === $label) ? 'active' : ''; ?>"
+                                    data-year="<?php echo $label; ?>">
+                                    <?php echo $label; ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
 
-        .strip-item-card img {
-            height: 120px !important;
-            object-fit: cover;
-        }
-
-        .strip-item-title {
-            font-size: 0.65rem !important;
-            margin: 0 !important;
-            line-height: 1.1;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .horizontal-strip .strip-item-card .card-body {
-            padding: 0.15rem 0.25rem !important;
-        }
-
-        .horizontal-strip .strip-item-card .card-body > *:last-child {
-            margin-bottom: 0 !important;
-        }
-
-        .strip-heading {
-            font-size: 0.85rem !important;
-            margin-bottom: 0.3rem !important;
-        }
-
-        /* GLOBAL SEARCH IN NAVBAR */
-        .navbar {
-            position: relative;
-        }
-
-        .global-search-form {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            position: relative;
-            margin: 0 1rem;
-        }
-
-        .global-search-form input[type="text"] {
-            width: 60%;
-            max-width: 400px;
-            padding: 4px 8px;
-            border-radius: 4px 0 0 4px;
-            border: 1px solid #ccc;
-            font-size: 0.9rem;
-        }
-
-        .global-search-form button {
-            padding: 4px 10px;
-            border-radius: 0 4px 4px 0;
-            border: 1px solid #ccc;
-            border-left: none;
-            font-size: 0.9rem;
-            background-color: #f8f9fa;
-        }
-
-        .global-search-results {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            max-width: 400px;
-            background: #fff;
-            color: #000;
-            border: 1px solid #ccc;
-            border-top: none;
-            display: none;
-            z-index: 1000;
-        }
-
-        .global-search-results .result-item {
-            display: block;
-            padding: 6px 10px;
-            text-decoration: none;
-            color: inherit;
-            font-size: 0.9rem;
-        }
-
-        .global-search-results .result-item:hover {
-            background-color: #f0f0f0;
-        }
-    </style>
-</head>
-<body class="bg-gray">
-
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-  <div class="container d-flex align-items-center">
-
-    <!-- Brand -->
-    <a class="navbar-brand me-3" href="index.php">i-rate Movies</a>
-
-    <!-- GLOBAL SEARCH: centered in navbar -->
-    <form id="global-search-form" class="global-search-form" action="search.php" method="get">
-        <input
-            type="text"
-            id="global-search-input"
-            name="q"
-            placeholder="Search by title, actor, or year"
-            autocomplete="off"
-            value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>"
-        >
-        <button type="submit">Search</button>
-        <div id="global-search-results" class="global-search-results"></div>
-    </form>
-
-    <!-- Right-hand side navigation -->
-    <div class="d-flex align-items-center">
-
-      <!-- Shared links: always visible -->
-      <ul class="navbar-nav flex-row me-3">
-        <li class="nav-item me-3">
-          <a class="nav-link text-dark p-0" href="index.php">Home</a>
-        </li>
-        <li class="nav-item me-3">
-          <a class="nav-link text-dark p-0" href="about_us.php">About</a>
-        </li>
-
-        <?php if (isset($_SESSION["user_id"])): ?>
-          <li class="nav-item me-3">
-            <a class="nav-link text-dark p-0" href="my_account.php?tab=favourites">Favourites</a>
-          </li>
-          <li class="nav-item me-3">
-            <a class="nav-link text-dark p-0" href="my_account.php?tab=reviews">Account</a>
-          </li>
-        <?php endif; ?>
-      </ul>
-
-      <?php if (isset($_SESSION["user_id"])): ?>
-
-        <!-- Greeting and badge -->
-        <span class="text-dark me-3">
-          Hello,
-          <a href="my_account.php" class="text-dark text-decoration-underline">
-            <?php echo htmlspecialchars($_SESSION["alias"]); ?>
-          </a>
-          <?php if ($reviewCount >= 11): ?>
-            <span class="badge bg-warning text-dark ms-2">⭐ Super Reviewer</span>
-          <?php endif; ?>
-        </span>
-
-        <!-- Logout button -->
-        <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
-
-      <?php else: ?>
-
-        <!-- Login / Register buttons when not logged in -->
-        <a href="login.php" class="btn btn-success btn-sm me-2">Login</a>
-        <a href="register.php" class="btn btn-primary btn-sm">Register</a>
-
-      <?php endif; ?>
-
+                    <!-- Sort by -->
+                    <div class="mb-3">
+                        <h6 class="mb-2">Sort by</h6>
+                        <select id="sortSelect" class="form-select">
+                            <option value="random"      <?php echo ($sortOrder === 'random') ? 'selected' : ''; ?>>Random</option>
+                            <option value="new"         <?php echo ($sortOrder === 'new') ? 'selected' : ''; ?>>New Movies</option>
+                            <option value="promotions"  <?php echo ($sortOrder === 'promotions') ? 'selected' : ''; ?>>Promotions</option>
+                            <option value="rating_desc" <?php echo ($sortOrder === 'rating_desc') ? 'selected' : ''; ?>>Highest Rated</option>
+                            <option value="year_asc"    <?php echo ($sortOrder === 'year_asc') ? 'selected' : ''; ?>>Year Made (Oldest First)</option>
+                            <option value="year_desc"   <?php echo ($sortOrder === 'year_desc') ? 'selected' : ''; ?>>Year Made (Newest First)</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
-</nav>
 
-<div class="container mt-4">
+    <!-- Movies grid -->
+    <div class="col-md-9">
+        <div class="row">
+            <?php if (!$moviesResult->num_rows): ?>
+                <div class="col-12">
+                    <p>No movies found for the selected filters.</p>
+                </div>
+            <?php else: ?>
+                <?php while ($movie = $moviesResult->fetch_assoc()): ?>
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow p-3 h-100">
+                            <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="stretched-link"></a>
+                            <img src="<?php echo htmlspecialchars($movie['image_url']); ?>"
+                                 class="card-img-top"
+                                 alt="Movie Image">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <?php echo htmlspecialchars($movie['title']); ?>
+                                </h5>
+                                <p class="card-text">
+                                    <?php echo htmlspecialchars(substr($movie['description'], 0, 100)); ?>...
+                                </p>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-secondary">
+                                        <?php echo htmlspecialchars($movie['genre']); ?>
+                                    </span>
+                                    <?php if (!empty($movie['year'])): ?>
+                                        <span class="badge bg-light text-dark ms-1">
+                                            <?php echo (int)$movie['year']; ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-end">
+                                    <?php
+                                        $averageRating = isset($movie['avg_rating']) ? (float)$movie['avg_rating'] : 0;
+                                    ?>
+                                    <small class="d-block mb-1">
+                                        Rating: <?php echo number_format($averageRating, 1); ?>
+                                    </small>
+                                    <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="btn btn-primary btn-sm">
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- FILTER JS (your existing code) -->
-<script>
-$(function () {
-    const $form       = $('#filterForm');
-    const $genreInput = $('#filterGenre');
-    const $yearInput  = $('#filterYear');
-    const $sortInput  = $('#filterSort');
-
-    // Genre buttons
-    $(document).on('click', '.genre-btn', function () {
-        $genreInput.val($(this).data('genre'));
-        $('.genre-btn').removeClass('active');
-        $(this).addClass('active');
-        $form.submit();
-    });
-
-    // Year buttons
-    $(document).on('click', '.year-btn', function () {
-        $yearInput.val($(this).data('year'));
-        $('.year-btn').removeClass('active');
-        $(this).addClass('active');
-        $form.submit();
-    });
-
-    // Sort select
-    $('#sortSelect').on('change', function () {
-        $sortInput.val($(this).val());
-        $form.submit();
-    });
-});
-</script>
-
-<!-- GLOBAL SEARCH AJAX -->
-<script>
-$(function () {
-    let timeout = null;
-
-    $('#global-search-input').on('keyup', function () {
-        clearTimeout(timeout);
-        const q = $(this).val().trim();
-
-        if (q.length < 2) {
-            $('#global-search-results').empty().hide();
-            return;
-        }
-
-        timeout = setTimeout(function () {
-            $.ajax({
-                url: 'search_ajax.php',
-                data: { q: q },
-                dataType: 'json',
-                success: function (data) {
-                    let html = '';
-                    if (data.length === 0) {
-                        html = '<div class="result-item">No results</div>';
-                    } else {
-                        data.forEach(function (movie) {
-                            html += '<a class="result-item" href="movie.php?id='
-                                  + movie.movie_id + '">'
-                                  + movie.title + ' (' + movie.year + ')</a>';
-                        });
-                    }
-                    $('#global-search-results').html(html).show();
-                }
-            });
-        }, 300);
-    });
-
-    // Hide dropdown when clicking elsewhere
-    $(document).on('click', function (e) {
-        if (!$(e.target).closest('#global-search-form').length) {
-            $('#global-search-results').hide();
-        }
-    });
-});
-</script>
+<?php include("includes/footer.php"); ?>

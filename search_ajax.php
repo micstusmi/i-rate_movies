@@ -1,5 +1,5 @@
 <?php
-require 'config.php';
+require_once __DIR__ . '/includes/db.php';
 header('Content-Type: application/json');
 
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
@@ -15,20 +15,24 @@ $sql = "
     SELECT movie_id, title, year
     FROM movies
     WHERE
-        title LIKE :q
-        OR actors LIKE :q
-        " . ($isYear ? " OR year = :year " : "") . "
+        title LIKE ?
+        OR actors LIKE ?
+        " . ($isYear ? " OR year = ? " : "") . "
     ORDER BY title
     LIMIT 10
 ";
 
-$stmt = $pdo->prepare($sql);
+$stmt = $conn->prepare($sql);
 $like = '%' . $q . '%';
-$stmt->bindParam(':q', $like, PDO::PARAM_STR);
+
 if ($isYear) {
-    $stmt->bindParam(':year', $q, PDO::PARAM_INT);
+    $stmt->bind_param('ssi', $like, $like, $q);
+} else {
+    $stmt->bind_param('ss', $like, $like);
 }
+
 $stmt->execute();
-$movies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$result = $stmt->get_result();
+$movies = $result->fetch_all(MYSQLI_ASSOC);
 
 echo json_encode($movies);

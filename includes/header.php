@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $reviewCount = 0;
 
 if (isset($_SESSION["user_id"])) {
-    include(__DIR__ . "/db.php");
+    require_once(__DIR__ . "/db.php");
 
     $reviewCountStmt = $conn->prepare("SELECT COUNT(*) as total FROM reviews WHERE user_id = ?");
     $reviewCountStmt->bind_param("i", $_SESSION["user_id"]);
@@ -15,12 +15,13 @@ if (isset($_SESSION["user_id"])) {
     $reviewCountRow = $reviewCountResult->fetch_assoc();
     $reviewCountStmt->close();
 
-    $reviewCount = $reviewCountRow["total"];
+    $reviewCount = (int)$reviewCountRow["total"];
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>i-rate Movies</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -61,17 +62,15 @@ if (isset($_SESSION["user_id"])) {
             margin: 0 !important;
             line-height: 1.1;
             display: -webkit-box;
-            -webkit-line-clamp: 2;      /* show max 2 lines */
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
-        /* Tighten card body inside strips */
         .horizontal-strip .strip-item-card .card-body {
             padding: 0.15rem 0.25rem !important;
         }
 
-        /* Remove default bottom spacing inside card body */
         .horizontal-strip .strip-item-card .card-body > *:last-child {
             margin-bottom: 0 !important;
         }
@@ -214,8 +213,10 @@ if (isset($_SESSION["user_id"])) {
 
 <div class="container mt-4">
 
-<!-- jQuery and filter JS -->
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- FILTER JS (existing index filters) -->
 <script>
 $(function () {
     const $form       = $('#filterForm');
@@ -272,7 +273,7 @@ $(function () {
                         html = '<div class="result-item">No results</div>';
                     } else {
                         data.forEach(function (movie) {
-                            html += '<a class="result-item" href="movie_details.php?id='
+                            html += '<a class="result-item" href="movie.php?id='
                                   + movie.movie_id + '">'
                                   + movie.title + ' (' + movie.year + ')</a>';
                         });
