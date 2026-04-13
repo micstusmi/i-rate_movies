@@ -58,3 +58,63 @@ Still to do / finish doing:
 
 Trello :
 https://trello.com/invite/b/69b75009c187e6b32845351d/ATTI03d99de0f7e8b3aa66221a5d8d8e1b48AF620EAC/i-rate-movie
+
+Task / Item
+The Final Website you submit must include the following functional elements:
+● Home page displaying random products from your chosen digital media collection
+● Navigation menu with dropdowns where necessary
+● Category filtering by genre (e.g., Comics, Romance, Thriller, Fiction, Non-fiction, etc.)
+● Detailed view page for each product containing:
+○ Title, synopsis/description
+○ Relevant metadata (e.g., director, author, stars)
+○ Form to submit reviews
+● User registration and sign-in system
+● Product rating system (star rating, Likert scale, or similar)
+● Search functionality to locate products quickly
+● User favorites list with options to add, remove, and manage favorites
+
+Brief
+● User account page where users can:
+○ View and manage their submitted reviews
+○ Update account details such as email, password, and username
+Assessment Instructions
+Your submission must include:
+● Complete project source code and all assets
+● Export of the database in SQL format (.sql file)
+● The link to your live website.
+● Your code must be hosted on a public GitHub repository
+● Provide a link to the repository
+● Ensure your website is fully functional and bug-free
+● Test all features before submission
+● Provide any deployment or setup instructions if applicable in a README file
+● For online hosting, ensure the URL is accessible and stable at time of grading
+
+Implementation and demonstration of a wish/favorite list:
+
+Excellent demonstration of the developer’s ability to implement a functioning user generated lists, including a wish or favorite list.
+
+Implementation and demonstration of a search functionality
+
+Excellent demonstration of the developer’s ability to implement a content discovery in the form of search function in a website to assist users in discovering content.
+
+Asynchronous Data
+
+Excellent demonstration of the ability to implement asynchronous data through front end data requests, using Ajax. This include the use of jQuery Ajax function in multiple occasions to update the website content.
+
+Implementation and demonstration of promotion list
+
+Excellent demonstration of the Implementation of other lists like promotions list, new arrival books list, or new movies …etc. The function performs all of its intended functions.
+
+Implementation and demonstration of Products' rating/review and feedback form
+
+Excellent Implementation and demonstration of a review or rating system for products and implementation of a Feedback form that submit reviews for products through the application.
+The function performs all of its intended functions.
+
+Implementation of a user account page
+
+An excellent implementation and demonstration of a user account page where users can view any reviews they have previously added and manage them, they also have the option to update their account details, like updating their email, password or the username.
+The function performs all of its intended functions.
+
+Source code repository and website hosting
+
+An excellent demonstration of the developer’s ability to use and maintain a source code repository (GitHub) as part of their development process. deployment of the website on a live server or live host such as InfinityFree, GoogieHost or AwardSpace.
