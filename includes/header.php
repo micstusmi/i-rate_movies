@@ -80,15 +80,87 @@ if (isset($_SESSION["user_id"])) {
             font-size: 0.85rem !important;
             margin-bottom: 0.3rem !important;
         }
+
+        /* GLOBAL SEARCH IN NAVBAR */
+        .navbar {
+            position: relative;
+        }
+
+        .global-search-form {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin: 0 1rem;
+        }
+
+        .global-search-form input[type="text"] {
+            width: 60%;
+            max-width: 400px;
+            padding: 4px 8px;
+            border-radius: 4px 0 0 4px;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+        }
+
+        .global-search-form button {
+            padding: 4px 10px;
+            border-radius: 0 4px 4px 0;
+            border: 1px solid #ccc;
+            border-left: none;
+            font-size: 0.9rem;
+            background-color: #f8f9fa;
+        }
+
+        .global-search-results {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            max-width: 400px;
+            background: #fff;
+            color: #000;
+            border: 1px solid #ccc;
+            border-top: none;
+            display: none;
+            z-index: 1000;
+        }
+
+        .global-search-results .result-item {
+            display: block;
+            padding: 6px 10px;
+            text-decoration: none;
+            color: inherit;
+            font-size: 0.9rem;
+        }
+
+        .global-search-results .result-item:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body class="bg-gray">
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-  <div class="container d-flex justify-content-between">
+  <div class="container d-flex align-items-center">
 
     <!-- Brand -->
-    <a class="navbar-brand" href="index.php">i-rate Movies</a>
+    <a class="navbar-brand me-3" href="index.php">i-rate Movies</a>
+
+    <!-- GLOBAL SEARCH: centered in navbar -->
+    <form id="global-search-form" class="global-search-form" action="search.php" method="get">
+        <input
+            type="text"
+            id="global-search-input"
+            name="q"
+            placeholder="Search by title, actor, or year"
+            autocomplete="off"
+            value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>"
+        >
+        <button type="submit">Search</button>
+        <div id="global-search-results" class="global-search-results"></div>
+    </form>
 
     <!-- Right-hand side navigation -->
     <div class="d-flex align-items-center">
@@ -171,6 +243,51 @@ $(function () {
     $('#sortSelect').on('change', function () {
         $sortInput.val($(this).val());
         $form.submit();
+    });
+});
+</script>
+
+<!-- GLOBAL SEARCH AJAX -->
+<script>
+$(function () {
+    let timeout = null;
+
+    $('#global-search-input').on('keyup', function () {
+        clearTimeout(timeout);
+        const q = $(this).val().trim();
+
+        if (q.length < 2) {
+            $('#global-search-results').empty().hide();
+            return;
+        }
+
+        timeout = setTimeout(function () {
+            $.ajax({
+                url: 'search_ajax.php',
+                data: { q: q },
+                dataType: 'json',
+                success: function (data) {
+                    let html = '';
+                    if (data.length === 0) {
+                        html = '<div class="result-item">No results</div>';
+                    } else {
+                        data.forEach(function (movie) {
+                            html += '<a class="result-item" href="movie_details.php?id='
+                                  + movie.movie_id + '">'
+                                  + movie.title + ' (' + movie.year + ')</a>';
+                        });
+                    }
+                    $('#global-search-results').html(html).show();
+                }
+            });
+        }, 300);
+    });
+
+    // Hide dropdown when clicking elsewhere
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#global-search-form').length) {
+            $('#global-search-results').hide();
+        }
     });
 });
 </script>
