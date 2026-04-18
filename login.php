@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (count($_SESSION['login_attempts']) >= $MAX_ATTEMPTS) {
         $message = "Too many failed login attempts. Please wait 10 minutes before trying again.";
     } else {
-        $stmt = $conn->prepare("SELECT user_id, password, alias FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT user_id, password, alias , email_verified FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -40,7 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
-
             if (password_verify($password, $user["password"])) {
                 // Reset attempts on success
                 $_SESSION['login_attempts'] = [];
@@ -83,5 +82,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </form>
 
 <p class="mt-3 text-danger"><?php echo htmlspecialchars($message); ?></p>
+<p class="mt-3"><a href="forgot_password.php">Forgot your password?</a></p>
 
 <?php include("includes/footer.php"); ?>

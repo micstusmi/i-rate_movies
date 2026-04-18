@@ -80,7 +80,12 @@ switch ($sortOrder) {
 }
 
 // Final query
-$moviesQuerySql = "SELECT * FROM movies $whereSql $orderBySql";
+$moviesQuerySql = "SELECT M.*, ROUND(AVG(R.rating), 1) AS avg_rating, COUNT(R.review_id) AS review_reviews
+                   FROM movies M
+                   LEFT JOIN reviews R ON M.movie_id = R.movie_id
+                   $whereSql
+                   GROUP BY M.movie_id
+                   $orderBySql";
 $moviesStmt = $conn->prepare($moviesQuerySql);
 
 if (!empty($queryParams)) {

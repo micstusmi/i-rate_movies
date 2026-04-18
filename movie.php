@@ -31,6 +31,19 @@ if ($movieResult->num_rows == 0) {
 $movie = $movieResult->fetch_assoc();
 $movieQuery->close();
 
+
+// got average rating for this movie
+$avgQuery = $conn->prepare("SELECT AVG(rating) AS avg_rating, COUNT(*) AS total_reviews
+FROM reviews WHERE movie_id = ?");
+$avgQuery->bind_param("i", $movieId);
+$avgQuery->execute();
+$avgResult = $avgQuery->get_result()->fetch_assoc();
+
+$averageRating = round($avgResult['avg_rating'], 1);
+$totalReviews = $avgResult['total_reviews'];
+$avgQuery->close();
+
+
 // Handles 'POST' actions: favourites and reviews
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -213,6 +226,22 @@ if ($loggedInUserId) {
         <p><strong>Genre:</strong> <?php echo htmlspecialchars($movie['genre']); ?></p>
         <p><strong>Year:</strong> <?php echo htmlspecialchars($movie['year']); ?></p>
         <p><strong>Actors:</strong> <?php echo htmlspecialchars($movie['actors']); ?></p>
+        <p><strong>Rating:</strong><?php if ($totalReviews>0): ?>
+          <?php for ($i=1; $i <=5; $i++){
+            if ($i <= round($averageRating)) {
+              echo '<i class="bi bi-star-fill text-warning"></i>';
+            } else {
+              echo '<i class="bi bi-star text-muted"></i>';
+            }
+          } ?>
+            <span class="ms-2">
+              <?php echo $averageRating;?>
+              (<?php echo $totalReviews;?> reviews)
+            </span>
+          <?php else: ?>
+            <span class="text-muted">No ratings yet</span>
+          <?php endif; ?>
+        </p>
       </div>
 
       <!-- Favourite / Unfavourite button -->
