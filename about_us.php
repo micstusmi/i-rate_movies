@@ -1,63 +1,140 @@
 <?php
 session_start();
-include(__DIR__ . "/includes/db.php");
+
 include(__DIR__ . "/includes/header.php");
 ?>
 
 <div class="container mt-5">
-    <h2 class="mb-4">About Us</h2>
-    <p>I-rate Movies is a movie review website that allows users to browse movies and find information relating to their movie/s of interest and if they want, they can rate / review a movie/s.</p> 
-        <p>Every movie has the facility to be able to be reviewed from 1-5 stars and add an additional comment if the user chooses to, provided that they are logged in.</p>
-        <p>The user is able to edit and delete their reviews, either from the movie page, or, from their account page.</p>
-        <p>On the movie detail page the reviewer is able to see their own review at the top of the reviews list, plus, see a list of everyone else's reviews in descending chronological order.</p>
-        <p>After a user has made 11+ reviews then they will be awarded with a super-reviewer status / badge.</p>
-    </br>
-    <hr>
-    </br>
 
-    <h3 class="mt-5 mb-3"><u>Frequently Asked Questions</u></h3>
+    <!-- ABOUT US -->
+    <h2 class="mb-3">About Us</h2>
+    <p>
+        I-rate Movies is a movie review platform where users can explore films,
+        share their opinions, and discover what others think before watching.
+    </p>
+    <p>
+        Users can rate movies from 1–5 stars, leave comments, and manage their reviews.
+        Reviews can be edited or deleted at any time via the movie page or account page.
+    </p>
+    <p>
+        Active contributors are recognised through our <strong>Super Reviewer</strong>
+        system. Users who submit 11 or more reviews earn a 🏅 badge displayed alongside
+        their name.
+    </p>
+
+    <hr class="my-5">
+
+    <!-- HELP / FAQ -->
+    <h2 class="mb-3">Help & FAQ</h2>
+
     <div class="accordion" id="faqAccordion">
+
         <div class="accordion-item">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
                 How do I create an account?
             </button>
             <div id="faq1" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    To create an account, click on the "Sign Up" button at the top right corner of the homepage and fill in the required information.
+                    Click "Sign Up" in the top-right corner and complete the registration form.
                 </div>
             </div>
         </div>
+
         <div class="accordion-item">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                How do I submit a review?
+                How do I leave a review?
             </button>
             <div id="faq2" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    To submit a review, navigate to the movie's detail page and click on the "Write a Review" button. You can then rate the movie and add your comments.
+                    Go to a movie page, select a star rating, and optionally add a comment.
+                    You must be logged in to submit a review.
                 </div>
             </div>
         </div>
+
         <div class="accordion-item">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
                 Can I edit or delete my reviews?
             </button>
             <div id="faq3" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    Yes, you can edit or delete your reviews from either the movie page or your account page. Simply find your review and click on the appropriate option.
+                    Yes. You can edit or delete your reviews from the movie page or your account page at any time.
                 </div>
             </div>
         </div>
+
         <div class="accordion-item">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                What is a super-reviewer badge?
+                What is a Super Reviewer?
             </button>
             <div id="faq4" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    A super-reviewer badge is awarded to users who have submitted 11 or more reviews. It is a recognition of their active participation in the community.
+                    Users who submit 11 or more reviews receive a 🏅 Super Reviewer badge,
+                    highlighting their contribution to the community.
                 </div>
             </div>
         </div>
+
+        <div class="accordion-item">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                Why can't I submit a review?
+            </button>
+            <div id="faq5" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    You must be logged in to submit a review. If you are logged in and still
+                    experiencing issues, try refreshing the page.
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <hr class="my-5">
+
+    <!-- PRIVACY -->
+    <h2 class="mb-3">Privacy & Data Use</h2>
+
+    <p>
+        We are committed to protecting your privacy and handling your data responsibly.
+        This section outlines what data we collect and how it is used.
+    </p>
+
+    <h5 class="mt-4">What data we collect</h5>
+    <ul>
+        <li>Account information (e.g. alias, login credentials)</li>
+        <li>Reviews and ratings you submit</li>
+        <li>Basic usage data to improve the platform</li>
+    </ul>
+
+    <h5 class="mt-4">How we use your data</h5>
+    <ul>
+        <li>To provide and maintain your account</li>
+        <li>To display your reviews and ratings publicly</li>
+        <li>To improve site functionality and user experience</li>
+    </ul>
+
+    <h5 class="mt-4">Your rights</h5>
+    <p>
+        In line with data protection laws (including GDPR), you have the right to:
+    </p>
+    <ul>
+        <li>Access the data we hold about you</li>
+        <li>Request correction of inaccurate data</li>
+        <li>Request deletion of your account and associated data</li>
+    </ul>
+
+    <h5 class="mt-4">Data retention</h5>
+    <p>
+        We retain your data only for as long as your account is active.
+        If you delete your account, your personal data will be removed.
+    </p>
+
+    <h5 class="mt-4">Data sharing</h5>
+    <p>
+        We do not sell or share your personal data with third parties.
+        Obviously your reviews are publicly visible, but your personal information (private account data) is not shared outside our organisation.
+    </p>
+
 </div>
 
 <?php include("includes/footer.php"); ?>

@@ -21,3 +21,8 @@ body {
     color: #565555;
     line-height: 1.6;
 }
+
+.super-reviewer-alias {
+    font-weight: 800;
+    color: #d4af37; /* gold */
+}

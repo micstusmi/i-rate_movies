@@ -1,7 +1,6 @@
 <?php
 session_start();
-include(__DIR__ . "/includes/db.php");
-include(__DIR__ . "/includes/header.php");
+require_once __DIR__ . '/includes/db.php';
 
 $message = "";
 
@@ -14,7 +13,7 @@ if (!isset($_SESSION['login_attempts'])) {
     $_SESSION['login_attempts'] = [];
 }
 
-// Cleans up the old attempts
+// Clean up old attempts
 $_SESSION['login_attempts'] = array_filter(
     $_SESSION['login_attempts'],
     function ($t) use ($WINDOW_SECONDS) {
@@ -31,6 +30,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = "Too many failed login attempts. Please wait 10 minutes before trying again.";
     } else {
         $stmt = $conn->prepare("SELECT user_id, password, alias FROM users WHERE email = ?");
+        if (!$stmt) {
+            die("Database error: " . $conn->error);
+        }
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -64,6 +66,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->close();
     }
 }
+
+// Only now output HTML:
+include __DIR__ . "/includes/header.php";
 ?>
 
 <h2>Login</h2>
@@ -84,4 +89,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <p class="mt-3 text-danger"><?php echo htmlspecialchars($message); ?></p>
 
-<?php include("includes/footer.php"); ?>
+<?php include __DIR__ . "/includes/footer.php"; ?>

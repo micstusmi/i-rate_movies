@@ -192,7 +192,7 @@ if (isset($_SESSION["user_id"])) {
             <?php echo htmlspecialchars($_SESSION["alias"]); ?>
           </a>
           <?php if ($reviewCount >= 11): ?>
-            <span class="badge bg-warning text-dark ms-2">⭐ Super Reviewer</span>
+            <span class="ms-1" title="Super Reviewer">🏅</span>
           <?php endif; ?>
         </span>
 
