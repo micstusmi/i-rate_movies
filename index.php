@@ -80,6 +80,13 @@ switch ($sortOrder) {
         $orderBySql = "ORDER BY avg_rating DESC, m.title ASC";
         break;
 
+    case 'rating_asc':
+    $orderBySql = "ORDER BY 
+        (COUNT(r.review_id) = 0) ASC,
+        AVG(r.rating) ASC,
+        m.title ASC";
+    break;
+
     case 'year_asc':
         $orderBySql = "ORDER BY `year` ASC, m.title ASC";
         break;
@@ -107,7 +114,8 @@ $newStripResult = $conn->query($newStripSql);
 // 8. Final query for main grid
 $moviesQuerySql = "
     SELECT m.*,
-           COALESCE(AVG(r.rating), 0) AS avg_rating
+       COALESCE(AVG(r.rating), 0) AS avg_rating,
+       COUNT(r.review_id) AS review_count
     FROM movies m
     LEFT JOIN reviews r ON m.movie_id = r.movie_id
     $whereSql $promoClause
@@ -194,6 +202,9 @@ switch ($sortOrder) {
     case 'rating_desc':
         $sortLabel = 'sorted by Highest Rated';
         break;
+    case 'rating_asc':
+        $sortLabel = 'sorted by Lowest Rated';
+        break;
     case 'year_asc':
         $sortLabel = 'sorted by Year (Oldest First)';
         break;
@@ -279,6 +290,7 @@ switch ($sortOrder) {
                             <option value="new"         <?php echo ($sortOrder === 'new') ? 'selected' : ''; ?>>New Movies</option>
                             <option value="promotions"  <?php echo ($sortOrder === 'promotions') ? 'selected' : ''; ?>>Promotions</option>
                             <option value="rating_desc" <?php echo ($sortOrder === 'rating_desc') ? 'selected' : ''; ?>>Highest Rated</option>
+                            <option value="rating_asc"  <?php echo ($sortOrder === 'rating_asc') ? 'selected' : ''; ?>>Lowest Rated</option>
                             <option value="year_asc"    <?php echo ($sortOrder === 'year_asc') ? 'selected' : ''; ?>>Year Made (Oldest First)</option>
                             <option value="year_desc"   <?php echo ($sortOrder === 'year_desc') ? 'selected' : ''; ?>>Year Made (Newest First)</option>
                         </select>
@@ -327,8 +339,25 @@ switch ($sortOrder) {
                                         $averageRating = isset($movie['avg_rating']) ? (float)$movie['avg_rating'] : 0;
                                     ?>
                                     <small class="d-block mb-1">
-                                        Rating: <?php echo number_format($averageRating, 1); ?>
-                                    </small>
+    <?php if ((int)$movie['review_count'] === 0): ?>
+        <span class="text-muted">No ratings yet</span>
+    <?php else: ?>
+        <?php
+            $rounded = round($averageRating);
+            for ($i = 1; $i <= 5; $i++) {
+                if ($i <= $rounded) {
+                    echo '<i class="bi bi-star-fill text-warning"></i>';
+                } else {
+                    echo '<i class="bi bi-star text-muted"></i>';
+                }
+            }
+        ?>
+        <?php echo number_format($averageRating, 1); ?>
+        <span class="text-muted">
+            (<?php echo (int)$movie['review_count']; ?>)
+        </span>
+    <?php endif; ?>
+</small>
                                     <a href="movie.php?id=<?php echo (int)$movie['movie_id']; ?>" class="btn btn-primary btn-sm">
                                         View
                                     </a>

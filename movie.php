@@ -205,7 +205,7 @@ if ($loggedInUserId) {
       <p class="small mb-3">
         You have written <strong><?php echo $userTotalReviews; ?></strong> review<?php echo $userTotalReviews === 1 ? '' : 's'; ?>.
         <?php if ($userTotalReviews >= $superThreshold): ?>
-          <span class="ms-1" title="Super Reviewer">Congratulations on becoming a 🏅 Super Reviewer!</span>
+          <span class="ms-1" title="Super Reviewer">Congrats on becoming a 🏅 Super Reviewer and thanks for your contributions!</span>
         <?php else: ?>
           <?php $remaining = max(0, $superThreshold - $userTotalReviews); ?>
           Earn the title <strong>🏅 Super Reviewer</strong> by writing

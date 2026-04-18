@@ -1,6 +1,6 @@
 <footer class="bg-light text-center text-muted py-1 mt-2 border-top">
     <small>
-        &copy; <?php echo date("Y"); ?> I-rate Movies |
+        &copy; <?php echo date("Y"); ?> i-rate_movies |
         <a href="about_us.php" class="text-muted text-decoration-none">About</a> |
         <a href="about_us.php#faqAccordion" class="text-muted text-decoration-none">Help</a> |
         <a href="about_us.php#privacy" class="text-muted text-decoration-none">Privacy</a>

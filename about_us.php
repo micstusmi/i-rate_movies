@@ -9,17 +9,18 @@ include(__DIR__ . "/includes/header.php");
     <!-- ABOUT US -->
     <h2 class="mb-3">About Us</h2>
     <p>
-        I-rate Movies is a movie review platform where users can explore films,
-        share their opinions, and discover what others think before watching.
+        i-rate_movies is a movie review platform where users can explore films,
+        share their opinions with the online film enthusiasts community, and read the reviews from other users before choosing what to watch.
     </p>
     <p>
         Users can rate movies from 1–5 stars, leave comments, and manage their reviews.
         Reviews can be edited or deleted at any time via the movie page or account page.
     </p>
     <p>
-        Active contributors are recognised through our <strong>Super Reviewer</strong>
-        system. Users who submit 11 or more reviews earn a 🏅 badge displayed alongside
-        their name.
+Once a user contributes 11 or more reviews, they are automatically recognised as a “Super Reviewer” and awarded a badge along with certain unique privileges.
+Users who review more films also tend to watch more films and, statistically speaking, often have more relevant knowledge and experience to draw upon.
+So what are you waiting for? Submit 11+ reviews ASAP and earn a 🏅 badge you can show to family, friends, and colleagues proudly as a way of validating your
+expertise as one of our most seasoned critics.
     </p>
 
     <hr class="my-5">
@@ -77,12 +78,48 @@ include(__DIR__ . "/includes/header.php");
 
         <div class="accordion-item">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
-                Why can't I submit a review?
+                What is the benefit of being a Super Reviewer?
             </button>
             <div id="faq5" class="accordion-collapse collapse">
                 <div class="accordion-body">
+                    The main benefit to earning the title of 🏅 Super Reviewer is not necessarily something the associated user receives, but more as a nett benefit
+                    to the community as a whole because 🏅 Super Reviewers reviews place above non-Super Reviewers reviews on movie pages. This makes it more likely that users will see 
+                    and benefit from the opinions of our most active and engaged movie reviewers. Obviously there are also the side-benefits of gamifying the application
+                    by incentivising users to write more regular reviews in order to earn the 🏅 Super Reviewer badge and obtain the associated recognition status plus 
+                    keeping more users returning to our platform which helps to elevate us in the organic search engine rankings which adds to our popularity and growth.
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                Why can't I submit a review?
+            </button>
+            <div id="faq6" class="accordion-collapse collapse">
+                <div class="accordion-body">
                     You must be logged in to submit a review. If you are logged in and still
                     experiencing issues, try refreshing the page.
+                </div>
+            </div>
+        </div>
+
+                <div class="accordion-item">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                Can I permanently delete my account and all associated data?
+            </button>
+            <div id="faq7" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    Yes, you can permanently delete your account and all associated data at any time from your account settings.
+                </div>
+            </div>
+        </div>
+
+                <div class="accordion-item">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                Is it safe to share my personal information with i-rate_movies?
+            </button>
+            <div id="faq8" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    We are committed to protecting your privacy and handling your data responsibly. Your personal information is never sold or shared with third parties.
                 </div>
             </div>
         </div>
