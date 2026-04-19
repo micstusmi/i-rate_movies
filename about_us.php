@@ -124,6 +124,17 @@ expertise as one of our most seasoned critics.
             </div>
         </div>
 
+<div class="accordion-item">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                Can I change my username?
+            </button>
+            <div id="faq9" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    At this time, users cannot change their username (alias) after registration. Please note that this feature request has already been submitted to our dev team and is in our list of future features to develop.
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <hr class="my-5">

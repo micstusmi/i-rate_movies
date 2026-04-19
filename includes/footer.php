@@ -19,11 +19,11 @@ function togglePassword(fieldId, btn) {
 
   if (input.type === "password") {
     input.type = "text";
-    // Changes icon to 'the eye with the slash though it' when password in plain text is showing
+    // Changes the icon to 'the eye with the slash though it' when password in plain text is showing
     icon.classList.replace('bi-eye', 'bi-eye-slash');
   } else {
     input.type = "password";
-    // Changes icon back to 'eye' when hiding password
+    // Changes the icon back to 'eye' when hiding password
     icon.classList.replace('bi-eye-slash', 'bi-eye');
   }
 }
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   })();
 
-  // Toggle edit form for "my review" on movie page 
+  // Toggles the edit form for "my review" on the movie page 
   (function () {
     const editBtn        = document.getElementById('edit-my-review-btn');
     const editForm       = document.getElementById('edit-my-review-form');

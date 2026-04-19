@@ -6,7 +6,7 @@ $message = "";
 if (!empty($_GET['token'])) {
     $token = $_GET['token'];
 
-    // Look up user by token
+    // Looks up the user by token
     $stmt = $conn->prepare("
         SELECT user_id, alias, email_verified 
         FROM users 
@@ -22,7 +22,7 @@ if (!empty($_GET['token'])) {
         if ((int)$row['email_verified'] === 1) {
             $message = "Your email is already verified. You can log in.";
         } else {
-            // Mark as verified and clear token
+            // Marks as verified and clears token
             $update = $conn->prepare("
                 UPDATE users 
                 SET email_verified = 1, verification_token = NULL 
@@ -31,7 +31,7 @@ if (!empty($_GET['token'])) {
             $update->bind_param("i", $row['user_id']);
 
             if ($update->execute()) {
-                // Option 1: log user in immediately
+                // Logs the user in immediately
                 session_start();
                 $_SESSION['user_id'] = $row['user_id'];
                 $_SESSION['alias'] = $row['alias'];
@@ -39,8 +39,6 @@ if (!empty($_GET['token'])) {
                 header("Location: index.php?verified=1");
                 exit;
 
-                // Option 2: don’t auto-login and show message instead:
-                // $message = "Your email has been verified. You can now log in.";
             } else {
                 $message = "Unable to verify your email. Please try again later.";
             }

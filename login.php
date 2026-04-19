@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/db.php';
 
 $message = "";
 
-// Throttle configuration
+// Throttle configuration to mitigate brute-force Login attempts.
 $MAX_ATTEMPTS   = 5;    // failed logins allowed
 $WINDOW_SECONDS = 600;  // 10 minutes window
 
