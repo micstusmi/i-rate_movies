@@ -37,7 +37,7 @@ Still to do / finish doing:
 1. Email validation – no email sending / verification yet.
 2. Global search bar.
 3. Automatic avg_rating updates – avg_rating has been created but not recalculated on review changes yet.
-4. Display average rating & review count on movie.php – not yet.
+4. Display average rating & review count on movie.php
 5. Super Reviewer styling in reviews – badge and coloured/bold aliases inside review lists.
 6. Password change facility – no change‑password workflow.
 7. Privacy dashboard page which might end up getting nested in the help page.
