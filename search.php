@@ -1,5 +1,5 @@
 <?php
-// search.php - full search results page
+// search.php - search results page
 
 // DB and header
 include __DIR__ . '/includes/db.php';
@@ -10,7 +10,7 @@ $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 $movies = [];
 if ($q !== '') {
 
-    // Split the query into separate words/tokens
+    // Splits the query into separate words/tokens
     $tokens = preg_split('/\s+/', $q);
     $conditions = [];
     $params     = [];
@@ -38,7 +38,7 @@ if ($q !== '') {
     }
 
     if (!empty($conditions)) {
-        // All tokens must match somewhere (AND between each token’s condition)
+        // All the tokens need to match somewhere (AND between each token’s condition)
         $whereSql = 'WHERE ' . implode(' AND ', $conditions);
 
         $sql = "

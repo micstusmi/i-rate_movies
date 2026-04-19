@@ -18,7 +18,7 @@ $stmt->execute();
 session_unset();
 session_destroy();
 
-// Redirects to homepage or login
+// Redirects to homepage
 header("Location: index.php");
 exit;
 ?>

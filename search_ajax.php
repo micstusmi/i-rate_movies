@@ -1,5 +1,5 @@
 <?php
-// search_ajax.php - live search endpoint
+// search_ajax.php - ultra user friendly search endpoint
 include __DIR__ . '/includes/db.php';
 
 header('Content-Type: application/json');

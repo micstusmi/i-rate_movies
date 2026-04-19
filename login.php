@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/db.php';
 
 $message = "";
 
-// Throttle configuration to mitigate brute-force Login attempts.
+// Throttles the configuration to mitigate brute-force Login attempts.
 $MAX_ATTEMPTS   = 5;    // failed logins allowed
 $WINDOW_SECONDS = 600;  // 10 minutes window
 
@@ -14,7 +14,7 @@ if (!isset($_SESSION['login_attempts'])) {
     $_SESSION['login_attempts'] = [];
 }
 
-// Clean up old attempts
+// Cleans up old attempts
 $_SESSION['login_attempts'] = array_filter(
     $_SESSION['login_attempts'],
     function ($t) use ($WINDOW_SECONDS) {
@@ -102,8 +102,34 @@ include __DIR__ . "/includes/header.php";
   </div>
 
 <button type="submit" class="btn btn-primary">Login</button>
+<div class="mt-3">
+    <a href="#" class="text-decoration-underline" data-bs-toggle="modal" data-bs-target="#devForgotModal">
+        Forgot password?
+    </a>
+</div>
 </form>
 
 <p class="mt-3 text-danger"><?php echo htmlspecialchars($message); ?></p>
+
+<!-- Temporary 'forgot password' workaround (manual override) solution while emails are not setup with SMTP configurations -->
+<div class="modal fade" id="devForgotModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">System Message: Dev Sandbox</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>The system is currently in <strong>dev sandbox mode</strong> and is unable to send emails.</p>
+        <p>Would you like to bypass the email step and update your password now via our manual override?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <!-- Redirects to your reset page directly -->
+        <a href="reset_password_dev_temp.php" class="btn btn-primary">Yes, Bypass Email</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <?php include __DIR__ . "/includes/footer.php"; ?>

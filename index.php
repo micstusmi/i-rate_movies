@@ -4,12 +4,12 @@
 require_once(__DIR__ . "/includes/db.php");
 require_once(__DIR__ . "/includes/header.php");
 
-// 1. Read filters / sort from query string
+// Reads filters / sorts from query string
 $selectedGenre = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $selectedYear  = isset($_GET['year'])  ? $_GET['year']  : 'all';
 $sortOrder     = isset($_GET['sort'])  ? $_GET['sort']  : 'random';
 
-// 2. Get distinct genres from movies
+// Gets distinct genres from movies
 $genresResult = $conn->query("
     SELECT DISTINCT genre
     FROM movies
@@ -21,7 +21,7 @@ while ($genreRow = $genresResult->fetch_assoc()) {
     $genres[] = $genreRow['genre'];
 }
 
-// 3. Define year ranges
+// Filters by year ranges (predefined)
 $yearRanges = [
     '1941-1950' => [1941, 1950],
     '1951-1960' => [1951, 1960],
@@ -34,12 +34,12 @@ $yearRanges = [
     '2021-2030' => [2021, 2030],
 ];
 
-// 4. Build WHERE conditions
+// 4. Builds WHERE conditions
 $whereClauses = [];
 $queryParams  = [];
 $paramTypes   = "";
 
-// Genre filter
+// Genres filter
 if ($selectedGenre !== 'all' && $selectedGenre !== '') {
     $whereClauses[] = "genre = ?";
     $paramTypes    .= "s";
@@ -60,13 +60,13 @@ if (!empty($whereClauses)) {
     $whereSql = "WHERE " . implode(" AND ", $whereClauses);
 }
 
-// 5. Promotions extra filter when sort == promotions
+// Promotions extra filter when sort == promotions
 $promoClause = "";
 if ($sortOrder === 'promotions') {
     $promoClause = empty($whereClauses) ? "WHERE is_promo = 1" : " AND is_promo = 1";
 }
 
-// 6. Sort order
+// Sort order
 switch ($sortOrder) {
     case 'new':
         $orderBySql = "ORDER BY created_at DESC, m.title ASC";
@@ -101,7 +101,7 @@ switch ($sortOrder) {
         break;
 }
 
-// 7. Data for horizontal strips (independent of sidebar filters)
+// Data for horizontal strips (independent of sidebar filters)
 
 // Promotions strip (top left)
 $promoStripSql    = "SELECT * FROM movies WHERE is_promo = 1 ORDER BY created_at DESC LIMIT 10";
@@ -111,7 +111,7 @@ $promoStripResult = $conn->query($promoStripSql);
 $newStripSql    = "SELECT * FROM movies ORDER BY created_at DESC LIMIT 10";
 $newStripResult = $conn->query($newStripSql);
 
-// 8. Final query for main grid
+// The last query for the main grid
 $moviesQuerySql = "
     SELECT m.*,
        COALESCE(AVG(r.rating), 0) AS avg_rating,
@@ -188,7 +188,7 @@ $moviesResult = $moviesStmt->get_result();
 <h2 class="mb-2">Movies</h2>
 
 <?php
-// Nice, human-readable "currently viewing" text
+// The "currently viewing" text
 $genreLabel = ($selectedGenre === 'all') ? 'All genres' : $selectedGenre;
 $yearLabel  = ($selectedYear === 'all')  ? 'All years'  : $selectedYear;
 

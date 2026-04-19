@@ -14,7 +14,7 @@ if (!isset($_GET["id"])) {
 $movieId = (int)$_GET["id"];  // movie_id
 $SUPER_REVIEWER_THRESHOLD = 11;
 
-// Fetch movie data WITH average rating + review count
+// Fetches movie data WITH average rating + review count
 $movieStmt = $conn->prepare("
     SELECT m.*,
            COALESCE(AVG(r.rating), 0) AS avg_rating,
@@ -42,7 +42,7 @@ $movieStmt->close();
 $averageRating = isset($movie['avg_rating']) ? (float)$movie['avg_rating'] : 0;
 $reviewCount   = isset($movie['review_count']) ? (int)$movie['review_count'] : 0;
 
-// Fetch reviews for this movie
+// Fetches reviews for this movie
 $userReview       = null;
 $otherReviews     = [];
 $loggedInUserId   = isset($_SESSION["user_id"]) ? (int)$_SESSION["user_id"] : null;
@@ -70,7 +70,7 @@ if ($loggedInUserId) {
     $isLoggedInUserSuper = ($userTotalReviews >= $SUPER_REVIEWER_THRESHOLD);
 }
 
-// Fetch all reviews with user's info and total reviews per user
+// Fetches all reviews with user's info and total reviews per user
 $movieReviewsStmt = $conn->prepare("
 SELECT
     r.review_id,
@@ -105,7 +105,7 @@ while ($reviewRow = $movieReviewsResult->fetch_assoc()) {
     }
 }
 
-// Sort other reviews: super reviewers first, then by created_at DESC
+// Sorts other reviews: super reviewers first, then by created_at DESC
 usort($otherReviews, function($a, $b) use ($SUPER_REVIEWER_THRESHOLD) {
     $aSuper = isset($a['total_reviews_by_user']) && (int)$a['total_reviews_by_user'] >= $SUPER_REVIEWER_THRESHOLD;
     $bSuper = isset($b['total_reviews_by_user']) && (int)$b['total_reviews_by_user'] >= $SUPER_REVIEWER_THRESHOLD;
@@ -120,7 +120,7 @@ usort($otherReviews, function($a, $b) use ($SUPER_REVIEWER_THRESHOLD) {
 
 $movieReviewsStmt->close();
 
-// Check if this movie is in the logged-in user's favourites
+// Checks if this movie is in the logged-in user's favourites
 $isFavorite = false;
 if ($loggedInUserId) {
     $favouriteCheckStmt = $conn->prepare("
@@ -367,48 +367,51 @@ if ($loggedInUserId) {
     <?php else: ?>
 
       <?php foreach ($otherReviews as $review): ?>
-        <?php
-          $isSuper = isset($review['total_reviews_by_user']) &&
-                     (int)$review['total_reviews_by_user'] >= $SUPER_REVIEWER_THRESHOLD;
-        ?>
-        <div class="card mb-3">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <h6 class="mb-1">
-                  <span class="<?php echo $isSuper ? 'super-reviewer-alias' : ''; ?>">
-                    <?php echo htmlspecialchars($review['alias']); ?>
-                  </span>
-                  <?php if ($isSuper): ?>
-                    <span class="ms-1" title="Super Reviewer">🏅</span>
-                  <?php endif; ?>
-                </h6>
-                <div class="mb-1">
-                  <?php
-                  for ($starIndex = 1; $starIndex <= 5; $starIndex++) {
-                      if ($starIndex <= (int)$review['rating']) {
-                          echo '<i class="bi bi-star-fill text-warning"></i>';
-                      } else {
-                          echo '<i class="bi bi-star text-muted"></i>';
-                      }
+    <?php
+      // Checks the count from the database for THIS specific review author
+      $isSuper = isset($review['total_reviews_by_user']) && (int)$review['total_reviews_by_user'] >= $SUPER_REVIEWER_THRESHOLD;
+    ?>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="mb-1">
+              <strong class="<?php echo $isSuper ? 'super-reviewer-alias' : ''; ?>">
+                <?php echo htmlspecialchars($review['alias']); ?>
+              </strong>
+              
+              <!-- The Badge Icon -->
+              <?php if ($isSuper): ?>
+                <span class="ms-1" title="Super Reviewer">🏅</span>
+              <?php endif; ?>
+            </h6>
+            <div class="mb-1">
+              <?php
+              for ($starIndex = 1; $starIndex <= 5; $starIndex++) {
+                  if ($starIndex <= (int)$review['rating']) {
+                      echo '<i class="bi bi-star-fill text-warning"></i>';
+                  } else {
+                      echo '<i class="bi bi-star text-muted"></i>';
                   }
-                  ?>
-                  <small class="text-muted">
-                    (<?php echo (int)$review['rating']; ?>/5)
-                  </small>
-                </div>
-              </div>
+              }
+              ?>
               <small class="text-muted">
-                <?php echo htmlspecialchars($review['created_at']); ?>
+                (<?php echo (int)$review['rating']; ?>/5)
               </small>
             </div>
-
-            <p class="card-text mt-2">
-              <?php echo nl2br(htmlspecialchars($review['comment'])); ?>
-            </p>
           </div>
+          <small class="text-muted">
+            <?php echo htmlspecialchars($review['created_at']); ?>
+          </small>
         </div>
-      <?php endforeach; ?>
+
+        <p class="card-text mt-2">
+          <?php echo nl2br(htmlspecialchars($review['comment'])); ?>
+        </p>
+      </div>
+    </div>
+<?php endforeach; ?>
+
 
     <?php endif; ?>
   </div>

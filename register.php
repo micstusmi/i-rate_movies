@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $emailVerified = 0;
 } else {
     $token = null;
-    $emailVerified = 1; // auto-verify in dev
+    $emailVerified = 1; // auto-verify is in dev mode to allow immediate login without email sending
 }
  
 $stmt = $conn->prepare("
@@ -84,7 +84,7 @@ $stmt->bind_param("sssis", $email, $hashedPassword, $alias, $emailVerified, $tok
                     </html>
                 ";
 
-                // Using PHP's mail() (for production, consider PHPMailer/SMTP)
+                // Supposed to use mail() (for production, consider PHPMailer/SMTP) but in dev mode we will bypass email sending and auto-login the user for immediate access.
                 if (EMAIL_VERIFICATION_REQUIRED) {
     if (mail($email, $subject, $body, $headers)) {
         $message = "Registration successful. Please check your email to verify your account.";
@@ -108,6 +108,7 @@ $stmt->bind_param("sssis", $email, $hashedPassword, $alias, $emailVerified, $tok
 }
 
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -115,6 +116,14 @@ $stmt->bind_param("sssis", $email, $hashedPassword, $alias, $emailVerified, $tok
 </head>
 <body>
 <?php include(__DIR__ . "/includes/header.php"); ?>
+
+<?php if (isset($_GET['deleted']) && $_GET['deleted'] === 'success'): ?>
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        Your account and all associated data have been permanently deleted. We're sorry to see you go!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
 
 <div class="container mt-4">
     <h2>Sign up to start reviewing</h2>

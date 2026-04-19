@@ -28,7 +28,7 @@ if (isset($_SESSION["user_id"])) {
     <link href="includes/style.css" rel="stylesheet">
 
     <style>
-        /* NEW & PROMOTIONS STRIPS */
+        /* Special STRIPS for PROMOTIONS & NEW movies added */
         .horizontal-strip {
             display: flex !important;
             flex-wrap: nowrap !important;
@@ -157,7 +157,7 @@ if (isset($_SESSION["user_id"])) {
             autocomplete="off"
             value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>"
         >
-        <button type="submit">Search</button>
+        <button type="submit"><i class="bi bi-search"></i></button>
         <div id="global-search-results" class="global-search-results"></div>
     </form>
 

@@ -9,7 +9,7 @@ require_once __DIR__ . "/includes/db.php";
 $userId = (int)$_SESSION["user_id"];
 
 $activeTab = $_GET['tab'] ?? 'reviews';
-if (!in_array($activeTab, ['reviews', 'favourites'], true)) {
+if (!in_array($activeTab, ['reviews', 'settings', 'favourites'], true)) {
     $activeTab = 'reviews';
 }
 
@@ -80,6 +80,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["change_password"])) {
     $currentPassword = $_POST["current_password"] ?? "";
     $newPassword     = $_POST["new_password"] ?? "";
     $confirmPassword = $_POST["confirm_password"] ?? "";
+    $commonPasswords = ['password', '123456', 'qwerty'];
+
 
     if ($currentPassword === "" || $newPassword === "" || $confirmPassword === "") {
         $_SESSION['flash_message'] = "All fields are required.";
@@ -92,6 +94,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["change_password"])) {
 
     } elseif (!preg_match('/[A-Za-z]/', $newPassword) || !preg_match('/[0-9]/', $newPassword)) {
         $_SESSION['flash_message'] = "Password must contain at least one letter and one number.";
+
+    } elseif (in_array(strtolower($newPassword), $commonPasswords)) {
+    $_SESSION['flash_message'] = "Please choose a stronger password.";
 
     } else {
         // DB logic
@@ -108,27 +113,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["change_password"])) {
         } elseif (password_verify($newPassword, $user["password"])) {
             $_SESSION['flash_message'] = "New password must be different from current password.";
 
-        } else {
+                } else {
             $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-
             $update = $conn->prepare("UPDATE users SET password = ? WHERE user_id = ?");
             $update->bind_param("si", $newHash, $userId);
 
-if ($update->execute()) {
-    // Sets a success message to show the user it worked (Does not destroy the session).
-    $_SESSION['flash_message'] = "Password updated successfully!";
-    
-    // Redirects back to the account page to prevent form resubmission and to show the flash message.
-    header("Location: my_account.php"); 
-    exit;
-} else {
-    $_SESSION['flash_message'] = "Error updating password.";
-}
-$update->close();
+            if ($update->execute()) {
+                $_SESSION['flash_message'] = "Password updated successfully!";
+                header("Location: my_account.php?tab=settings#password-anchor"); 
+                exit;
+            } else {
+                $_SESSION['flash_message'] = "Error updating password.";
+                header("Location: my_account.php?tab=settings#password-anchor");
+                exit;
+            }
+            $update->close();
         }
     }
-exit;
+    // Redirects to the Change Password area on the my_account.php page if there is an error so that the user can see the flash message.
+    header("Location: my_account.php?tab=settings#password-anchor");
+    exit;
 }
+
 include(__DIR__ . "/includes/header.php");
 ?>
 
@@ -147,21 +153,19 @@ include(__DIR__ . "/includes/header.php");
 
 <hr>
 
-<!-- Tabs (My reviews / My favourites) -->
+<!-- Tabs (My reviews / My favourites / Account Settings) -->
 <ul class="nav nav-tabs mb-3">
   <li class="nav-item">
-    <a class="nav-link <?php echo ($activeTab === 'reviews') ? 'active' : ''; ?>"
-       href="my_account.php?tab=reviews">
-      My reviews
-    </a>
+    <a class="nav-link <?php echo ($activeTab === 'settings') ? 'active' : ''; ?>" href="my_account.php?tab=settings#password-anchor">Account Settings</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link <?php echo ($activeTab === 'favourites') ? 'active' : ''; ?>"
-       href="my_account.php?tab=favourites">
-      My favourites
-    </a>
+    <a class="nav-link <?php echo ($activeTab === 'reviews') ? 'active' : ''; ?>" href="my_account.php?tab=reviews">My reviews</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo ($activeTab === 'favourites') ? 'active' : ''; ?>" href="my_account.php?tab=favourites">My favourites</a>
   </li>
 </ul>
+
 
 <?php if ($activeTab === 'reviews'): ?>
 
@@ -315,65 +319,112 @@ include(__DIR__ . "/includes/header.php");
 
 <hr>
 
-<h4>Change Password</h4>
+<?php if ($activeTab === 'settings'): ?>
+  <div id="password-anchor" class="card shadow-sm mt-3">
+    <div class="card-header bg-light py-3">
+      <h4 class="mb-0 text-secondary">Account Settings</h4>
+    </div>
+    <div class="card-body p-4">
 
-<?php if (!empty($_SESSION['flash_message'])): ?>
-  <div class="alert alert-info">
-    <?php 
-      echo htmlspecialchars($_SESSION['flash_message']); 
-      unset($_SESSION['flash_message']); // clear after showing
-    ?>
+      <!-- Accessible flash message for any form submission results -->
+      <?php if (isset($_SESSION['flash_message'])): 
+          $isSuccess = (strpos($_SESSION['flash_message'], 'successfully') !== false);
+          $alertClass = $isSuccess ? 'alert-success' : 'alert-danger';
+          $icon = $isSuccess ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
+      ?>
+          <div class="alert <?php echo $alertClass; ?> d-flex align-items-center alert-dismissible fade show" role="alert">
+              <i class="bi <?php echo $icon; ?> me-2 fs-5"></i>
+              <div>
+                <strong><?php echo $isSuccess ? 'Success: ' : 'Error: '; ?></strong>
+                <?php echo htmlspecialchars($_SESSION['flash_message']); unset($_SESSION['flash_message']); ?>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+      <?php endif; ?>
+
+      <!-- Change Password Form -->
+      <section class="mb-5">
+        <h5 class="mb-3">Change Password</h5>
+        <form method="POST">
+            <!-- Current Password -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Current Password</label>
+                <div class="input-group">
+                    <input type="password" name="current_password" id="cur-pass" class="form-control" required>
+                    <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('cur-pass', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- New Password -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">New Password</label>
+                <div class="input-group">
+                    <input type="password" name="new_password" id="new-pass" class="form-control" required>
+                    <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('new-pass', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div class="form-text">Must be 8+ characters with a letter and a number.</div>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Confirm New Password</label>
+                <div class="input-group">
+                    <input type="password" name="confirm_password" id="confirm-pass" class="form-control" required>
+                    <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('confirm-pass', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" name="change_password" class="btn btn-primary">Update Password</button>
+        </form>
+      </section>
+
+      <hr class="my-5">
+
+      <!-- DELETE ACCOUNT SECTION -->
+      <section class="border border-danger p-4 rounded bg-white">
+          <h5 class="text-danger fw-bold mb-4">
+              DELETE ACCOUNT
+          </h5>
+
+          <p class="text-muted small">
+              <strong>BEWARE!</strong> Deleting your account will permanently remove all data including reviews / favourites, etc. This action cannot be undone.
+          </p>
+          
+          <button type="button" class="btn btn-danger fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+             <i class="bi bi-trash3 me-2"></i>Delete My Account
+          </button>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirm Account Deletion</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you absolutely sure? All your movie reviews and favourites will be permanently removed.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form action="handlers/delete_account.php" method="POST">
+              <button type="submit" class="btn btn-danger">Yes, Delete Everything</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 <?php endif; ?>
-
-<form method="POST" class="w-50 mb-4">
-  <!-- Current Password -->
-  <div class="mb-3">
-    <label class="form-label">Current Password</label>
-    <div class="input-group">
-      <input type="password" name="current_password" id="current_password" class="form-control" required>
-      <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password', this)">
-        <i class="bi bi-eye"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- New Password -->
-  <div class="mb-3">
-    <label class="form-label">New Password</label>
-    <div class="input-group">
-      <input type="password" name="new_password" id="new_password" class="form-control" required>
-      <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password', this)">
-        <i class="bi bi-eye"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Confirm New Password -->
-  <div class="mb-3">
-    <label class="form-label">Confirm New Password</label>
-    <div class="input-group">
-      <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
-      <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password', this)">
-        <i class="bi bi-eye"></i>
-      </button>
-    </div>
-  </div>
-
-  <button type="submit" name="change_password" class="btn btn-primary w-20 mt-2">
-    Update Password
-  </button>
-</form>
-
-<h4>Permanently delete my account &amp; data</h4>
-
-<form method="POST"
-      action="handlers/deleted_account.php"
-      onsubmit="return confirm('Are you sure you want to delete your account and all associated data? This cannot be undone.');">
-  <button type="submit" class="btn btn-danger">
-    Delete my account
-  </button>
-</form>
 
 <!-- Toggle script -->
 <script>

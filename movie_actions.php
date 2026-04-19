@@ -3,7 +3,7 @@ session_start();
 
 require __DIR__ . "/includes/db.php";
 
-// Ensure we have a movie ID
+// Ensures that we have a movie ID
 if (!isset($_GET['id'])) {
     header("Location: index.php");
     exit;
@@ -16,12 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Handle POST actions: favourites and reviews
+// Handles POST actions: favourites and reviews
 
-// 1) FAVOURITES (add/remove)
+// FAVOURITES (add/remove)
 if (isset($_POST['add_favorite']) || isset($_POST['remove_favorite'])) {
     if (!isset($_SESSION["user_id"])) {
-        // Not logged in – send back to login with redirect target if you like
+        // If not logged in – send back to login with redirect target if you like
         header("Location: login.php");
         exit;
     }
@@ -40,7 +40,7 @@ if (isset($_POST['add_favorite']) || isset($_POST['remove_favorite'])) {
             $addFavouriteStmt->close();
         }
     } elseif (isset($_POST['remove_favorite'])) {
-        // Delete favourite
+        // Deletes favourite
         $removeFavouriteStmt = $conn->prepare("
             DELETE FROM user_favorites
             WHERE user_id = ? AND movie_id = ?
@@ -56,7 +56,7 @@ if (isset($_POST['add_favorite']) || isset($_POST['remove_favorite'])) {
     exit;
 }
 
-// 2) REVIEWS (create/update/delete)
+// Reviews (create/update/delete)
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
     exit;
@@ -64,7 +64,7 @@ if (!isset($_SESSION["user_id"])) {
 
 $currentUserId = (int)$_SESSION["user_id"];
 
-// Delete review
+// Deletes a review
 if (isset($_POST['delete_review'])) {
     $reviewIdToDelete = (int)($_POST['review_id'] ?? 0);
 
@@ -93,7 +93,7 @@ if ($ratingValue < 1 || $ratingValue > 5) {
 }
 
 if (isset($_POST['update_review']) && isset($_POST['review_id'])) {
-    // Update existing review
+    // Updates existing review
     $reviewIdToUpdate = (int)$_POST['review_id'];
 
     $updateReviewStmt = $conn->prepare("
@@ -108,7 +108,7 @@ if (isset($_POST['update_review']) && isset($_POST['review_id'])) {
     }
 
 } elseif (isset($_POST['submit_review'])) {
-    // Create new review
+    // Creates a new review
     $createReviewStmt = $conn->prepare("
         INSERT INTO reviews (user_id, movie_id, rating, comment)
         VALUES (?, ?, ?, ?)
@@ -120,6 +120,6 @@ if (isset($_POST['update_review']) && isset($_POST['review_id'])) {
     }
 }
 
-// Redirect back to movie page
+// Redirects back to the movie page
 header("Location: movie.php?id=" . $movieId);
 exit;
