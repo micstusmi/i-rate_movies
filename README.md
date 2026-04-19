@@ -1,6 +1,6 @@
-i-rate movies setup info:
+To visit this web application put this URL: https://www.i-rate_movies.php into your browser.
 
-Setup (For Vivian)
+Legacy Setup (For Vivian) i-rate movies setup info:
 
 1. Download the repository from GitHub.
 2. Save everything in C:\xampp\htdocs\i-rate_movies\
