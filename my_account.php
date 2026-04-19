@@ -1,21 +1,17 @@
 <?php
-include(__DIR__ . "/includes/db.php");
-include(__DIR__ . "/includes/header.php");
-
-// Require login
-if (!isset($_SESSION["user_id"])) {
-    echo "You must be logged in to view your account.";
-    include("includes/footer.php");
-    exit;
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+require_once __DIR__ . "/includes/db.php";
 
 $userId = (int)$_SESSION["user_id"];
 
-// Which section to show: 'reviews' tab or 'favourites' tab
-$activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'reviews';
-
-
-// Gets user's info
+$activeTab = $_GET['tab'] ?? 'reviews';
+if (!in_array($activeTab, ['reviews', 'favourites'], true)) {
+    $activeTab = 'reviews';
+}
 
 $userQuery = $conn->prepare("
     SELECT alias, email, created_at
@@ -29,7 +25,6 @@ $userQuery->close();
 
 if ($userResult->num_rows == 0) {
     echo "User not found.";
-    include("includes/footer.php");
     exit;
 }
 
@@ -79,6 +74,62 @@ $favouritesStmt->bind_param("i", $userId);
 $favouritesStmt->execute();
 $favouritesResult = $favouritesStmt->get_result();
 $favouritesStmt->close();
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["change_password"])) {
+
+    $currentPassword = $_POST["current_password"] ?? "";
+    $newPassword     = $_POST["new_password"] ?? "";
+    $confirmPassword = $_POST["confirm_password"] ?? "";
+
+    if ($currentPassword === "" || $newPassword === "" || $confirmPassword === "") {
+        $_SESSION['flash_message'] = "All fields are required.";
+
+    } elseif ($newPassword !== $confirmPassword) {
+        $_SESSION['flash_message'] = "New passwords do not match.";
+
+    } elseif (strlen($newPassword) < 8) {
+        $_SESSION['flash_message'] = "Password must be at least 8 characters.";
+
+    } elseif (!preg_match('/[A-Za-z]/', $newPassword) || !preg_match('/[0-9]/', $newPassword)) {
+        $_SESSION['flash_message'] = "Password must contain at least one letter and one number.";
+
+    } else {
+        // DB logic
+
+        $stmt = $conn->prepare("SELECT password FROM users WHERE user_id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$user || !password_verify($currentPassword, $user["password"])) {
+            $_SESSION['flash_message'] = "Current password is incorrect.";
+
+        } elseif (password_verify($newPassword, $user["password"])) {
+            $_SESSION['flash_message'] = "New password must be different from current password.";
+
+        } else {
+            $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+
+            $update = $conn->prepare("UPDATE users SET password = ? WHERE user_id = ?");
+            $update->bind_param("si", $newHash, $userId);
+
+if ($update->execute()) {
+    // Sets a success message to show the user it worked (Does not destroy the session).
+    $_SESSION['flash_message'] = "Password updated successfully!";
+    
+    // Redirects back to the account page to prevent form resubmission and to show the flash message.
+    header("Location: my_account.php"); 
+    exit;
+} else {
+    $_SESSION['flash_message'] = "Error updating password.";
+}
+$update->close();
+        }
+    }
+exit;
+}
+include(__DIR__ . "/includes/header.php");
 ?>
 
 <h2>My Account</h2>
@@ -262,6 +313,58 @@ $favouritesStmt->close();
 
 <hr>
 
+<hr>
+
+<h4>Change Password</h4>
+
+<?php if (!empty($_SESSION['flash_message'])): ?>
+  <div class="alert alert-info">
+    <?php 
+      echo htmlspecialchars($_SESSION['flash_message']); 
+      unset($_SESSION['flash_message']); // clear after showing
+    ?>
+  </div>
+<?php endif; ?>
+
+<form method="POST" class="w-50 mb-4">
+  <!-- Current Password -->
+  <div class="mb-3">
+    <label class="form-label">Current Password</label>
+    <div class="input-group">
+      <input type="password" name="current_password" id="current_password" class="form-control" required>
+      <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password', this)">
+        <i class="bi bi-eye"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- New Password -->
+  <div class="mb-3">
+    <label class="form-label">New Password</label>
+    <div class="input-group">
+      <input type="password" name="new_password" id="new_password" class="form-control" required>
+      <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password', this)">
+        <i class="bi bi-eye"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Confirm New Password -->
+  <div class="mb-3">
+    <label class="form-label">Confirm New Password</label>
+    <div class="input-group">
+      <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+      <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password', this)">
+        <i class="bi bi-eye"></i>
+      </button>
+    </div>
+  </div>
+
+  <button type="submit" name="change_password" class="btn btn-primary w-20 mt-2">
+    Update Password
+  </button>
+</form>
+
 <h4>Permanently delete my account &amp; data</h4>
 
 <form method="POST"
@@ -288,4 +391,4 @@ function cancelEdit(reviewId) {
 }
 </script>
 
-<?php include("includes/footer.php"); ?>
+<?php include __DIR__ . "/includes/footer.php"; ?>

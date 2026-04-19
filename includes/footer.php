@@ -12,6 +12,22 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+
+function togglePassword(fieldId, btn) {
+  const input = document.getElementById(fieldId);
+  const icon = btn.querySelector('i'); // Gets the <i> tag inside the button
+
+  if (input.type === "password") {
+    input.type = "text";
+    // Changes icon to 'the eye with the slash though it' when password in plain text is showing
+    icon.classList.replace('bi-eye', 'bi-eye-slash');
+  } else {
+    input.type = "password";
+    // Changes icon back to 'eye' when hiding password
+    icon.classList.replace('bi-eye-slash', 'bi-eye');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   // Function for a star rating widget
   function setupStarWidget(container, hiddenInput, textEl, initialRating) {

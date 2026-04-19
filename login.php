@@ -80,7 +80,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-// Only now output HTML:
 include __DIR__ . "/includes/header.php";
 ?>
 
@@ -94,7 +93,12 @@ include __DIR__ . "/includes/header.php";
 
   <div class="mb-3">
     <label class="form-label">Password</label>
-    <input type="password" name="password" class="form-control" required>
+    <div class="input-group">
+        <input type="password" name="password" class="form-control" id="login-password" required>
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('login-password', this)">
+<i class="bi bi-eye"></i>
+            </button>
+        </div>
   </div>
 
 <button type="submit" class="btn btn-primary">Login</button>

@@ -1,4 +1,7 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/config.php';
 include(__DIR__ . "/includes/db.php");
 
@@ -11,11 +14,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST["email"] ?? '');
     $alias = trim($_POST["alias"] ?? '');
     $password = $_POST["password"] ?? '';
+    $commonPasswords = ['password', '123456', 'qwerty'];
 
     if ($email === '' || $alias === '' || $password === '') {
         $message = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Please enter a valid email address.";
+    } elseif (strlen($password) < 8) {
+        $message = "Password must be at least 8 characters.";
+    } elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+        $message = "Password must contain at least one letter and one number.";
+    } elseif (in_array(strtolower($password), $commonPasswords)) {
+        $message = "Please choose a stronger password.";
     } else {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
@@ -35,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $token = null;
     $emailVerified = 1; // auto-verify in dev
 }
-
+ 
 $stmt = $conn->prepare("
     INSERT INTO users (email, password, alias, email_verified, verification_token)
     VALUES (?, ?, ?, ?, ?)
@@ -82,7 +92,12 @@ $stmt->bind_param("sssis", $email, $hashedPassword, $alias, $emailVerified, $tok
         $message = "Account created, but we could not send a verification email.";
     }
 } else {
-    $message = "Registration successful. You can now log in.";
+    // Saving this for future use: $message = "Your email address has now been verified and your account is already activated. You can now log in.";
+    // Auto-Login after successful registration (for the interim) whilst in dev mode, effectively bypasses the email verification.
+    $_SESSION["user_id"] = $newUserId;
+    $_SESSION["alias"] = $alias;
+    header("Location: index.php");
+    exit;
 }
 
             } else {
@@ -91,6 +106,7 @@ $stmt->bind_param("sssis", $email, $hashedPassword, $alias, $emailVerified, $tok
         }
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -134,7 +150,12 @@ $stmt->bind_param("sssis", $email, $hashedPassword, $alias, $emailVerified, $tok
 
         <div class="mb-3">
             <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" required>
+            <div class="input-group">
+  <input type="password" name="password" class="form-control" id="register-password" required>
+  <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('register-password', this)">
+<i class="bi bi-eye"></i>
+  </button>
+</div>
         </div>
 
         <button type="submit" class="btn btn-primary">Register</button>
