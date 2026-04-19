@@ -31,8 +31,9 @@ Web Dev Tech Stack
 - Xampp for database tables and for local database hosting / developing.
 - HTML
 - JavaScript
+- Ajax
 
-Still to do / finish doing:
+*Below is a list of completed features added for assignment number 3 (except email verification was going to be too time consuming to complete and unneccesary for this assignment):
 
 1. Email validation – no email sending / verification yet.
 2. Global search bar.
