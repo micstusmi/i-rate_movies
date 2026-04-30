@@ -1,4 +1,4 @@
-To visit this web application put this URL: https://www.i-rate_movies.infinityfree.com into your browser.
+To visit this web application put this URL: https://i-rate-movies.infinityfreeapp.com/?i=1 into your browser.
 
 Legacy Setup (For Vivian) i-rate movies setup info:
 
